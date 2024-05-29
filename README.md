@@ -12,3 +12,5 @@ Current using:
 * 27 Oct 2023, branch "NewParallel"
 	* improve multitask functionality
 	* new implementation of NLFFF parallelization 
+
+* 29 May 2024
