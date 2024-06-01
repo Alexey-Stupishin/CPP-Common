@@ -138,8 +138,9 @@ public:
         , CagmScalarField *_absField, CagmScalarField *_absWeight
         , CagmScalarField *_losField, CagmScalarField *_losWeight
         , CagmScalarField *_bottomWeight
+        , int _depth
         , int _priority = w_priority::low);
 	virtual ~CagpWiegelmann();
 
-    double step(int _iterN, int _depth);
+    double step(int _iterN);
 };

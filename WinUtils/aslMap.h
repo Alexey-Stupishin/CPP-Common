@@ -1,7 +1,7 @@
 #if !defined(AGS_20141108_013000_ASLMAP_H)
 #define AGS_20141108_013000_ASLMAP_H
 
-#ifdef _MSVC_BUILD
+#ifdef _WINDOWS
 #pragma warning(disable:4996)
 #endif
 
@@ -11,13 +11,9 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
-#ifdef _MSVC_BUILD
-#pragma warning(disable:4996)
-#endif
-
 #define _MAX_BUFFER 64
 
-#ifdef _MSVC_BUILD
+#ifdef _WINDOWS
 //EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 #endif
@@ -36,7 +32,7 @@ public:
 	aslMap()
         : lng(0)
     {
-#ifdef _MSVC_BUILD
+#ifdef _WINDOWS
         char modfile[_MAX_PATH];
         ::GetModuleFileName(HINST_THISCOMPONENT, modfile, sizeof(modfile));
 
@@ -117,7 +113,7 @@ public:
             return get(key, value);
         else
         {
-#ifdef _MSVC_BUILD
+#ifdef _WINDOWS
             char buffer[_MAX_BUFFER];
             char pkey[_MAX_BUFFER];
             strcpy(pkey, key);

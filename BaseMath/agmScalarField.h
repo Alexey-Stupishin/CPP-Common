@@ -62,8 +62,8 @@ protected:
     {
         data->Copy(allocField, nullptr, nullptr, idx);
 
-        double step[] = {1.0, 1.0, 1.0};
-        SetSteps(step);
+        double _step[] = {1.0, 1.0, 1.0};
+        SetSteps(_step);
 
         return 0;
     }
@@ -72,8 +72,8 @@ protected:
     {
         memcpy(allocField, S, sizeof(double)*N[0]*N[1]*N[2]);
 
-        double step[] = {1.0, 1.0, 1.0};
-        SetSteps(step);
+        double _step[] = {1.0, 1.0, 1.0};
+        SetSteps(_step);
 
         return 0;
     }

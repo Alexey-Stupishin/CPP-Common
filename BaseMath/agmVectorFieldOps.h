@@ -4,12 +4,13 @@
 #include "agmRKF45.h"
 
 #include "agm3DgridDefines.h"
+#include "CubeXD.h"
 
 class CagmScalarFieldOps;
 class CagmRotate3D;
 
 //------------------------------------------------------------------
-class CagmVectorFieldOps
+class CagmVectorFieldOps : public CubeXD
 {
 friend class CagmScalarFieldOps;
 //friend CagmVectorFieldOps& operator*(const CagmVectorFieldOps&, const CagmVectorFieldOps&);
@@ -82,7 +83,6 @@ public:
 
 	uint32_t cross(CagmVectorFieldOps *a, const CagmVectorFieldOps *b);
     //CagmVectorFieldOps& operator*(const CagmVectorFieldOps&);
-    uint32_t blockF(CagmVectorFieldOps *B, CagmScalarFieldOps *N, CagmScalarFieldOps *w, CagmVectorFieldOps *gradw);
     uint32_t cross(CagmVectorFieldOps *a);
     uint32_t rot(CagmVectorFieldOps *a);
     uint32_t rot31(CagmVectorFieldOps *a);
@@ -151,8 +151,9 @@ public:
         int maxResult, int *length, double *coord, int *status);
 
     uint32_t rotate3D(CagmRotate3D *, bool);
-    uint32_t planeDerivative(int layer, double **d);
-    uint32_t planeDerivative2(int layer, double **d, double **dd);
+    //uint32_t planeDerivative(int layer, double **d);
+    //uint32_t planeDerivative2(int layer, double **d, double **dd);
+    //uint32_t blockF(CagmVectorFieldOps *B, CagmScalarFieldOps *N, CagmScalarFieldOps *w, CagmVectorFieldOps *gradw);
 
 protected:
 	uint32_t Initialize(int *_N, int *_NphysL = nullptr, int *_NphysH = nullptr, double *_step = nullptr);

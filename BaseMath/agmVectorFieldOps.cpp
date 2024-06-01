@@ -70,6 +70,8 @@ uint32_t CagmVectorFieldOps::Initialize(int *_N, int *_NphysL, int *_NphysH, dou
         step[2] = 1.0;
     }
 
+    set_dim(3);
+
     return 0;
 }
 
@@ -140,7 +142,7 @@ uint32_t CagmVectorFieldOps::SetMargins(CagmVectorFieldOps *source, int *Mmin, i
 }
 
 //-----------------------------------------------------------------------
-uint32_t CagmVectorFieldOps::setRefField(double *X, double *Y, double *Z, int *M)
+uint32_t CagmVectorFieldOps::setRefField(double *X, double *Y, double *Z, int * /* M */)
 {
     for (int kz = 0; kz < N[2]; kz++)
         for (int ky = 0; ky < N[1]; ky++)
@@ -167,30 +169,6 @@ uint32_t CagmVectorFieldOps::SetSteps(double *_step)
 double * CagmVectorFieldOps::GetSteps()
 {
     return step;
-}
-
-//-----------------------------------------------------------------------
-uint32_t CagmVectorFieldOps::blockF(CagmVectorFieldOps *_B, CagmScalarFieldOps *_n, CagmScalarFieldOps *_w, CagmVectorFieldOps *_gradw)
-{
-    int kx, ky, kz;
-    for (kz = 0; kz < N[2]; kz++)
-        for (ky = 0; ky < N[1]; ky++)
-            for (kx = 0; kx < N[0]; kx++)
-            {
-                double w = _w->field[fidx(kx, ky, kz)];
-                double dw_dx = _gradw->fieldX[fidx(kx, ky, kz)];
-                double dw_dy = _gradw->fieldY[fidx(kx, ky, kz)];
-                double dw_dz = _gradw->fieldZ[fidx(kx, ky, kz)];
-                double Z = _n->field[fidx(kx, ky, kz)];
-                double dZ_dx = _n->derivative(kx, ky, kz, 0);
-                double dZ_dy = _n->derivative(kx, ky, kz, 1);
-                double dZ_dz = _n->derivative(kx, ky, kz, 2);
-
-                //double dBx_dx = derivative(kx, ky, kz, 0, 0);
-            }
-
-
-    return 0;
 }
 
 //-----------------------------------------------------------------------
@@ -1222,17 +1200,17 @@ uint32_t CagmVectorFieldOps::setBounds(CagmVectorFieldOps *boundsx, CagmVectorFi
 }
 
 //-----------------------------------------------------------------------
-uint32_t CagmVectorFieldOps::stretch(CagmVectorFieldOps *src, Interpolator inetrp, double p1, double p2, double p3)
+uint32_t CagmVectorFieldOps::stretch(CagmVectorFieldOps *src, Interpolator /* inetrp */, double /* p1 */, double /* p2 */, double /* p3 */)
 {
     double cx = (double)(src->N[0] - 1)/(double)(N[0] - 1);
     double cy = (double)(src->N[1] - 1)/(double)(N[1] - 1);
     double cz = (double)(src->N[2] - 1)/(double)(N[2] - 1);
 
-    if (inetrp == Lanczos)
-    {
-        int win = (int)p1;
-        int size = (int)p2;
-    }
+    //if (inetrp == Lanczos)
+    //{
+    //    int win = (int)p1;
+    //    int size = (int)p2;
+    //}
 
 	int kx, ky, kz;
 	int x1, y1, z1;
@@ -1284,7 +1262,6 @@ uint32_t CagmVectorFieldOps::conv(CagmVectorFieldOps *src, CagmScalarFieldOps *w
                         }
                     }
                 }
-                double xx = src->fieldX[fidx(kx, ky, kz)];
                 fieldX[fidx(kx, ky, kz)] = sx; // / M;
                 fieldY[fidx(kx, ky, kz)] = sy; // / M;
                 fieldZ[fidx(kx, ky, kz)] = sz; // / M;
@@ -1354,6 +1331,30 @@ uint32_t CagmVectorFieldOps::rotate3D(CagmRotate3D *rotator, bool direction)
     return 0;
 }
 
+////-----------------------------------------------------------------------
+//uint32_t CagmVectorFieldOps::blockF(CagmVectorFieldOps * /* _B */, CagmScalarFieldOps *_n, CagmScalarFieldOps *_w, CagmVectorFieldOps *_gradw)
+//{
+//    int kx, ky, kz;
+//    for (kz = 0; kz < N[2]; kz++)
+//        for (ky = 0; ky < N[1]; ky++)
+//            for (kx = 0; kx < N[0]; kx++)
+//            {
+//                double w = _w->field[fidx(kx, ky, kz)];
+//                double dw_dx = _gradw->fieldX[fidx(kx, ky, kz)];
+//                double dw_dy = _gradw->fieldY[fidx(kx, ky, kz)];
+//                double dw_dz = _gradw->fieldZ[fidx(kx, ky, kz)];
+//                double Z = _n->field[fidx(kx, ky, kz)];
+//                double dZ_dx = _n->derivative(kx, ky, kz, 0);
+//                double dZ_dy = _n->derivative(kx, ky, kz, 1);
+//                double dZ_dz = _n->derivative(kx, ky, kz, 2);
+//
+//                //double dBx_dx = derivative(kx, ky, kz, 0, 0);
+//            }
+//
+//
+//    return 0;
+//}
+//
 ////-----------------------------------------------------------------------
 //uint32_t CagmVectorFieldOps::planeDerivative(int layer, double *d)
 //{

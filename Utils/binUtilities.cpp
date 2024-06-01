@@ -3,7 +3,7 @@
 
 #include "binUtilities.h"
 
-#ifdef _MSVC_BUILD
+#ifdef _WINDOWS
 #pragma warning(disable:4996)
 #endif
 

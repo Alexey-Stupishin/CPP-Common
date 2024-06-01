@@ -100,14 +100,14 @@ TaskQueueProcessor::~TaskQueueProcessor()
 unsigned long TaskQueueProcessor::proceed(std::vector<ATQPProcessor *>& processors, ATQPSupervisor *supervisor, int priority)
 {
 
-    std::size_t num_proc = processors.size();
+    std::size_t _num_proc = processors.size();
 
     sync->reset();
     supervisor->reset();
 
     std::thread supervisorThread(supervisorFunc, supervisor);
     std::vector<std::thread> threads;
-    for (std::size_t i = 0; i < num_proc; i++)
+    for (std::size_t i = 0; i < _num_proc; i++)
         threads.push_back(std::thread(processorFunc, processors[i]));
 
     for (auto &t : threads)
@@ -120,7 +120,7 @@ unsigned long TaskQueueProcessor::proceed(std::vector<ATQPProcessor *>& processo
     }
     supervisorThread.join();
 
-    console_debug("terminated " << num_proc << " processors")
+    console_debug("terminated " << _num_proc << " processors")
 
     return 0;
 }
