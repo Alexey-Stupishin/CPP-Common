@@ -42,15 +42,15 @@ CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
     , depth(_depth)
     , priority(_priority)
 {
-    memcpy(N, vB->N, 3*sizeof(int));
-    double *_steps = vB->GetSteps();
+    vB->dimensions(N);
 
-    vgradW = new CagmVectorField(N);
-    vgradW->SetSteps(_steps);
+    vgradW = new CagmVectorField(sW);
+
+    DebugWriteData(sW, "debug_W", depth);
 
     vgradW->grad(sW);
 
-    DebugWriteData(vgradW, "debug_gradW");
+    DebugWriteData(vgradW, "debug_gradW", depth);
 
     int Nb[3];
     Nb[0] = N[0];
@@ -58,35 +58,25 @@ CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
     Nb[2] = 1;
     vBottom = new CagmVectorField(Nb);
 
-    B2 = new CagmScalarField(N);
-    B2->SetSteps(_steps);
-    rotB = new CagmVectorField(N);
-    rotB->SetSteps(_steps);
-    divB = new CagmScalarField(N);
-    divB->SetSteps(_steps);
-    Wa = new CagmVectorField(N);
-    Wa->SetSteps(_steps);
-    Wb = new CagmVectorField(N);
-    Wb->SetSteps(_steps);
-    Wa2Wb2 = new CagmScalarField(N);
-    Wa2Wb2->SetSteps(_steps);
-    WaxB = new CagmVectorField(N);
-    WaxB->SetSteps(_steps);
-    WbxB = new CagmScalarField(N);
-    WbxB->SetSteps(_steps);
-    v = new CagmVectorField(N);
-    v->SetSteps(_steps);
-    s = new CagmScalarField(N);
-    s->SetSteps(_steps);
+    B2 = new CagmScalarField(vB);
+    rotB = new CagmVectorField(vB);
+    divB = new CagmScalarField(vB);
+    Wa = new CagmVectorField(vB);
+    Wb = new CagmVectorField(vB);
+    Wa2Wb2 = new CagmScalarField(vB);
+    WaxB = new CagmVectorField(vB);
+    WbxB = new CagmScalarField(vB);
+    v = new CagmVectorField(vB);
+    s = new CagmScalarField(vB);
 
     if (WiegelmannGetMetricsTheta)
     {
-        st  =  new CagmScalarField(N);
-        Binv = new CagmScalarField(N);
-        Jinv = new CagmScalarField(N);
-        Bmod = new CagmScalarField(N);
-        Jmod = new CagmScalarField(N);
-        JxB  = new CagmScalarField(N);
+        st  =  new CagmScalarField(vB);
+        Binv = new CagmScalarField(vB);
+        Jinv = new CagmScalarField(vB);
+        Bmod = new CagmScalarField(vB);
+        Jmod = new CagmScalarField(vB);
+        JxB  = new CagmScalarField(vB);
     }
 
     main_proc = new TaskQueueProcessor(_n_threads);
@@ -152,8 +142,17 @@ double CagpWiegelmann::step(int _iterN)
     mode = 0;
     main_proc->proceed(processors, supervisor, priority);
 
-    //DebugWriteData(B2, "B2", depth, iterN);
-    // invB rotB Wa divB Wb WaxB WbxB
+    if (depth == 1 && iterN == 0)
+    { 
+        DebugWriteData(B2, "B2", depth, iterN);
+        //DebugWriteData(invB, "invB", depth, iterN);
+        DebugWriteData(rotB, "rotB", depth, iterN);
+        DebugWriteData(Wa, "Wa", depth, iterN);
+        DebugWriteData(divB, "divB", depth, iterN);
+        DebugWriteData(Wb, "Wb", depth, iterN);
+        DebugWriteData(WaxB, "WaxB", depth, iterN);
+        DebugWriteData(WbxB, "WbxB", depth, iterN);
+    }
 
     double _s = 0;
     for (int kz = 0; kz < N[2]; kz++)

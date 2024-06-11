@@ -110,7 +110,7 @@ uint32_t CbinDataStruct::Delete()
     for (int i = 0; i < nRead; i++)
     {
         delete [] data[i].data;
-        data[i].data = NULL;
+        data[i].data = nullptr;
     }
 
     nRead = 0;

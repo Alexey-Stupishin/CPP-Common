@@ -41,43 +41,6 @@ protected:
         return 0;
     }
 
-    uint32_t Copy(const CagmScalarField& from)
-    {
-        if (from.isRef)
-        {
-            int ky, kz;
-            for (kz = 0; kz < N[2]; kz++)
-                for (ky = 0; ky < N[1]; ky++)
-                    memcpy(allocField + (ky + kz*N[1])*N[0], from.allocField + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
-        }
-        else
-            memcpy(allocField, from.allocField, sizeof(double)*N[0]*N[1]*N[2]);
-
-        SetSteps((double *)from.step);
-
-        return 0;
-    }
-
-    uint32_t Copy(CbinDataStruct* data, int idx = 0)
-    {
-        data->Copy(allocField, nullptr, nullptr, idx);
-
-        double _step[] = {1.0, 1.0, 1.0};
-        SetSteps(_step);
-
-        return 0;
-    }
-
-    uint32_t Copy(double *S) // use carefully!
-    {
-        memcpy(allocField, S, sizeof(double)*N[0]*N[1]*N[2]);
-
-        double _step[] = {1.0, 1.0, 1.0};
-        SetSteps(_step);
-
-        return 0;
-    }
-
     uint32_t Delete()
     {
 		if (!isRef)
@@ -87,66 +50,38 @@ protected:
     }
 
 public:
-	CagmScalarField(int *_N, bool isAlloc = true, int *_DphysL = nullptr, int *_DphysH = nullptr)
-		: CagmScalarFieldOps(_N, _DphysL, _DphysH),
-          allocField(nullptr)  
+	CagmScalarField(int *_N, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr)
+		: CagmScalarFieldOps(_N, _step, _NL, _NH)
+        , allocField(nullptr)
+        , isRef(false)
     {
-		isRef = !isAlloc;
-        if (isAlloc)
-            Alloc();
+        Alloc();
 	}
 
 	CagmScalarField(CbinDataStruct* data, int idx = 0)
-        : CagmScalarFieldOps(data->GetDimensions()),
-          allocField(nullptr)  
-        {
-    		isRef = false;
-            Alloc();
-            Copy(data, idx);
-		}
-
-	CagmScalarField(int *N, double *S)
-        : CagmScalarFieldOps(N),
-          allocField(nullptr)  
-        {
-    		isRef = false;
-            Alloc();
-            Copy(S);
-		}
-
-    CagmScalarField(const CagmScalarField& from) // copy constructor, creates only solid copy
-        : CagmScalarFieldOps(from),
-          allocField(nullptr)  
+        : CagmScalarFieldOps(data->GetDimensions())
+        , allocField(nullptr)  
+        , isRef(false)
     {
-        isRef = false;
         Alloc();
-        Copy(from);
-    }
-
-	CagmScalarField(CagmScalarFieldOps *source, int *M, int *Mmin, int *_DphysL = nullptr, int *_DphysH = nullptr)
-		: CagmScalarFieldOps(M, _DphysL, _DphysH),
-          allocField(nullptr)  
-    {
-		isRef = true;
-        SetMargins(source, Mmin, _DphysL, _DphysH);
-        SetSteps(source->step);
+        data->Copy(allocField, nullptr, nullptr, idx);
 	}
 
-    CagmScalarField& operator=(const CagmScalarField& from) // creates only solid copy
+    CagmScalarField(CubeXD *_from, bool copy = false)
+        : CagmScalarFieldOps(_from)
+        , allocField(nullptr)  
+        , isRef(false)
     {
-        if (this == &from)
-            return *this;
-
-        this->CagmScalarFieldOps::operator=(from);
-
-        Delete();
+        dim_ = 1;
         Alloc();
-        Copy(from);
 
-        return *this;
+        if (!copy)
+            return;
+
+        CagmScalarField *from = (CagmScalarField *)_from;
+
+        memcpy(allocField, from->allocField, sizeof(double)*N[0]*N[1]*N[2]);
     }
-
-    uint32_t CreateConvWindow();
 
     uint32_t setField(double *Bc)
     {
@@ -155,30 +90,12 @@ public:
         return 0;
     }
 
-    uint32_t Copy(CagmScalarField *source, int *Mmin)
-    {
-        // M == N !
-	    int kx, ky, kz;
-        for (kz = 0; kz < N[2]; kz++)
-            for (ky = 0; ky < N[1]; ky++)
-                for (kx = 0; kx < N[0]; kx++)
-                    allocField[(ky + kz*N[1])*N[0] + kx] = source->allocField[(ky+Mmin[1] + (kz+Mmin[2])*source->N[1])*source->N[0] + kx+Mmin[0]];
-
-        SetSteps(source->step);
-        
-        return 0;
-    }
-
     uint32_t Copy2Bottom(CagmScalarField *source)
     {
-        // N[0] = source->N[0]; N[1] = source->N[1]; 
-	    int kx, ky, kz;
-        for (kz = 0; kz < source->N[2]; kz++)
-            for (ky = 0; ky < source->N[1]; ky++)
-                for (kx = 0; kx < source->N[0]; kx++)
+        for (int kz = source->NL[2]; kz < source->NH[2]; kz++)
+            for (int ky = source->NL[1]; ky < source->NH[1]; ky++)
+                for (int kx = source->NL[0]; kx < source->NH[0]; kx++)
                     allocField[(ky + kz*N[1])*N[0] + kx] = source->allocField[(ky + kz*source->N[1])*source->N[0] + kx];
-
-        SetSteps(source->step);
         
         return 0;
     }
@@ -207,12 +124,12 @@ public:
         double *wy = new double[N[1]];
         double *wz = new double[N[2]];
 
-        double zD = N[2]*bound;
+        double zD = (NH[2]-NL[2])*bound;
         zb[0] = 0; zb[1] = 0;
-        for (kz = 0; kz < N[2]; kz++)
+        for (kz = NL[2]; kz < NH[2]; kz++)
         {
-            if (type == SWF_COS && kz > N[2]-zD-1)
-                wz[kz] = cos(v_pi_c*0.5* rel_bound_weight *(kz-N[2]+zD+1)/zD);
+            if (type == SWF_COS && kz > NH[2]-zD-1)
+                wz[kz] = cos(v_pi_c*0.5* rel_bound_weight *(kz-NH[2]+zD+1)/zD);
             else
             {
                 wz[kz] = v_1;
@@ -221,14 +138,14 @@ public:
             }
         }
 
-        double yD = N[1]*bound;
+        double yD = (NH[1]-NL[1])*bound;
         yb[0] = N[1]; yb[1] = 0;
-        for (ky = 0; ky < N[1]; ky++)
+        for (ky = NL[1]; ky < NH[1]; ky++)
         {
-            if (type == SWF_COS && ky > N[1]-yD-1)
-                wy[ky] = cos(v_pi_c*0.5* rel_bound_weight *(ky-N[1]+1+yD)/yD);
-            else if (type == SWF_COS && ky < yD)
-                wy[ky] = cos(v_pi_c*0.5* rel_bound_weight *(v_1 - ky/yD));
+            if (type == SWF_COS && ky > NH[1]-yD-1)
+                wy[ky] = cos(v_pi_c*0.5* rel_bound_weight *(ky-NH[1]+1+yD)/yD);
+            else if (type == SWF_COS && ky < NL[1]+yD)
+                wy[ky] = cos(v_pi_c*0.5* rel_bound_weight *(v_1 - (ky+NL[1])/yD));
             else
             {
                 wy[ky] = v_1;
@@ -239,14 +156,14 @@ public:
             }
         }
 
-        double xD = N[0]*bound;
+        double xD = (NH[0]-NL[0])*bound;
         xb[0] = N[0]; xb[1] = 0;
-        for (kx = 0; kx < N[0]; kx++)
+        for (kx = NL[0]; kx < NH[0]; kx++)
         {
-            if (type == SWF_COS && kx > N[0]-xD-1)
-                wx[kx] = cos(v_pi_c*0.5* rel_bound_weight *(kx-N[0]+1+xD)/xD);
-            else if (type == SWF_COS && kx < xD)
-                wx[kx] = cos(v_pi_c*0.5* rel_bound_weight *(v_1 - kx/xD));
+            if (type == SWF_COS && kx > NH[0]-xD-1)
+                wx[kx] = cos(v_pi_c*0.5* rel_bound_weight *(kx-NH[0]+1+xD)/xD);
+            else if (type == SWF_COS && kx < NL[0]+xD)
+                wx[kx] = cos(v_pi_c*0.5* rel_bound_weight *(v_1 - (kx+NL[0])/xD));
             else
             {
                 wx[kx] = v_1;
@@ -257,9 +174,9 @@ public:
             }
         }
 
-        for (kz = 0; kz < N[2]; kz++)
-            for (ky = 0; ky < N[1]; ky++)
-                for (kx = 0; kx < N[0]; kx++)
+        for (kz = NL[2]; kz < NH[2]; kz++)
+            for (ky = NL[1]; ky < NH[1]; ky++)
+                for (kx = NL[0]; kx < NH[0]; kx++)
                     allocField[kx + (ky + kz*N[1])*N[0]] = wx[kx]*wy[ky]*wz[kz];
 
         delete [] wx;
@@ -268,22 +185,4 @@ public:
 
         return 0;
     }
-
-    uint32_t divD(CagmVectorField *a);
-    uint32_t dotD(CagmVectorField *a, CagmVectorField *b);
-    uint32_t abs2D(CagmVectorField *a);
-    uint32_t absD(CagmVectorField *a);
-    uint32_t invD(CagmScalarField *a);
-    uint32_t invD(void);
-    uint32_t multD(double c, CagmScalarField *a);
-    uint32_t multD(double c);
-    uint32_t multD(CagmScalarField *c, CagmScalarField *a);
-    uint32_t multD(CagmScalarField *c);
-    uint32_t addD(CagmScalarField *a, CagmScalarField *b);
-    uint32_t addD(CagmScalarField *a);
-    uint32_t subD(CagmScalarField *a, CagmScalarField *b);
-    uint32_t subD(CagmScalarField *a);
-    uint32_t negD(CagmScalarField *a);
-    uint32_t negD();
-    uint32_t zeroD();
 };
