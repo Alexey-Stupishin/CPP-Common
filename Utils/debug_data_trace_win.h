@@ -45,7 +45,7 @@ public:
 
     void write(CubeXD *v)
     {
-        if (v->dim == 1)
+        if (v->dim() == 1)
             write_scalar((CagmScalarField *)v);
         else
             write_vector((CagmVectorField *)v);

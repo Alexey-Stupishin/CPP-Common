@@ -22,36 +22,6 @@ public:
         return 3*sizeof(double)*N[0]*N[1]*N[2] + sizeof(CagmVectorField) + CagmVectorFieldOps::GetAllocSize(N);
     }
 
-    //uint32_t Get(CagmVectorField& to)
-    //{
-    //    return to.Copy(*this);
-    //}
-
-    uint32_t Copy(const CagmVectorField& from)
-    {
-        if (from.isRef)
-        {
-            int ky, kz;
-            for (ky = 0; ky < N[1]; ky++)
-                for (kz = 0; kz < N[2]; kz++)
-                {
-                    memcpy(allocFieldX + (ky + kz*N[1])*N[0], from.allocFieldX + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
-                    memcpy(allocFieldY + (ky + kz*N[1])*N[0], from.allocFieldY + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
-                    memcpy(allocFieldZ + (ky + kz*N[1])*N[0], from.allocFieldZ + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
-                }
-        }
-        else
-        {
-            memcpy(allocFieldX, from.allocFieldX, sizeof(double)*N[0]*N[1]*N[2]);
-            memcpy(allocFieldY, from.allocFieldY, sizeof(double)*N[0]*N[1]*N[2]);
-            memcpy(allocFieldZ, from.allocFieldZ, sizeof(double)*N[0]*N[1]*N[2]);
-        }
-
-        SetSteps((double *)from.step);
-
-        return 0;
-    }
-
 public:
     double *allocFieldX,  *allocFieldY,  *allocFieldZ;
 
@@ -68,36 +38,13 @@ protected:
         memset(allocFieldY, 0, sizeof(double)*N[0]*N[1]*N[2]);
         memset(allocFieldZ, 0, sizeof(double)*N[0]*N[1]*N[2]);
 
-        int ky, kz;
-        for (ky = 0; ky < N[1]; ky++)
-            for (kz = 0; kz < N[2]; kz++)
+        for (int ky = 0; ky < N[1]; ky++)
+            for (int kz = 0; kz < N[2]; kz++)
             {
                 fieldX[ky + kz*N[1]] = allocFieldX + (ky + kz*N[1])*N[0];
                 fieldY[ky + kz*N[1]] = allocFieldY + (ky + kz*N[1])*N[0];
                 fieldZ[ky + kz*N[1]] = allocFieldZ + (ky + kz*N[1])*N[0];
             }
-
-        return 0;
-    }
-
-    uint32_t Copy(CbinDataStruct *data)
-    {
-        data->Copy(allocFieldX, allocFieldY, allocFieldZ);
-
-        double _step[] = {1.0, 1.0, 1.0};
-        SetSteps(_step);
-
-        return 0;
-    }
-
-    uint32_t Copy(double *Bx, double *By, double *Bz)
-    {
-        CopyComp(Bx, 0);
-        CopyComp(By, 1);
-        CopyComp(Bz, 2);
-
-        double _step[] = {1.0, 1.0, 1.0};
-        SetSteps(_step);
 
         return 0;
     }
@@ -115,98 +62,97 @@ protected:
     }
 
 public:
-	CagmVectorField(int *_N, bool isAlloc = true, int *_DphysL = nullptr, int *_DphysH = nullptr)
-        : CagmVectorFieldOps(_N, _DphysL, _DphysH),
-          allocFieldX(nullptr),  
-          allocFieldY(nullptr),  
-          allocFieldZ(nullptr)  
-        {
-    		isRef = !isAlloc;
-            if (isAlloc)
-                Alloc();
-		}
-
-	CagmVectorField(CbinDataStruct* data)
-        : CagmVectorFieldOps(data->GetDimensions()),
-          allocFieldX(nullptr),  
-          allocFieldY(nullptr),  
-          allocFieldZ(nullptr)  
-        {
-    		isRef = false;
-            Alloc();
-            Copy(data);
-		}
-
-	CagmVectorField(int *N, double *Bx, double *By, double *Bz)
-        : CagmVectorFieldOps(N),
-          allocFieldX(nullptr),  
-          allocFieldY(nullptr),  
-          allocFieldZ(nullptr)  
-        {
-    		isRef = false;
-            Alloc();
-            Copy(Bx, By, Bz);
-		}
-
-    CagmVectorField(const CagmVectorField& from) // copy constructor, creates only solid copy
-        : CagmVectorFieldOps(from),
-          allocFieldX(nullptr),  
-          allocFieldY(nullptr),  
-          allocFieldZ(nullptr)  
+	CagmVectorField(int *_N, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr)
+        : CagmVectorFieldOps(_N, _step, _NL, _NH)
+        , allocFieldX(nullptr)  
+        , allocFieldY(nullptr)  
+        , allocFieldZ(nullptr)  
+        , isRef(false)
     {
-        isRef = false;
         Alloc();
-        Copy(from);
-    }
-
-	CagmVectorField(CagmVectorFieldOps *source, int *M, int *Mmin, int *_DphysL = nullptr, int *_DphysH = nullptr)
-        : CagmVectorFieldOps(M, _DphysL, _DphysH),
-          allocFieldX(nullptr),  
-          allocFieldY(nullptr),  
-          allocFieldZ(nullptr)  
-    {
-		isRef = true;
-        SetMargins(source, Mmin, _DphysL, _DphysH);
-
-        SetSteps(source->step);
 	}
 
-    CagmVectorField(double *X, double *Y, double *Z, int *M, double *steps = nullptr)
-        : CagmVectorFieldOps(M),
-        allocFieldX(nullptr),
-        allocFieldY(nullptr),
-        allocFieldZ(nullptr)
+	CagmVectorField(CbinDataStruct* data)
+        : CagmVectorFieldOps(data->GetDimensions())
+        , allocFieldX(nullptr)  
+        , allocFieldY(nullptr)  
+        , allocFieldZ(nullptr)  
+        , isRef(false)
     {
-        isRef = true;
+        Alloc();
+        data->Copy(allocFieldX, allocFieldY, allocFieldZ);
+	}
 
-        setRefField(X, Y, Z, M);
+    CagmVectorField(CubeXD *_from, bool copy = false)
+        : CagmVectorFieldOps(_from)
+        , allocFieldX(nullptr)  
+        , allocFieldY(nullptr)  
+        , allocFieldZ(nullptr)  
+    {
+        dim_ = 3;
+        Alloc();
 
-        if (steps)
-            SetSteps(steps);
+        if (!copy)
+            return;
+
+        CagmVectorField *from = (CagmVectorField *)_from;
+
+        isRef = from->isRef;
+        Copy(from);
+    }
+
+	CagmVectorField(int *N, double *Bx, double *By, double *Bz, bool _isRef = false)
+        : CagmVectorFieldOps(N)
+        , allocFieldX(nullptr)  
+        , allocFieldY(nullptr)  
+        , allocFieldZ(nullptr)  
+        , isRef(_isRef)
+    {
+        if (isRef)
+        {
+            for (int kz = 0; kz < N[2]; kz++)
+                for (int ky = 0; ky < N[1]; ky++)
+                {
+                    fieldX[ky + kz*N[1]] = Bx + (ky + kz*N[1])*N[0];
+                    fieldY[ky + kz*N[1]] = By + (ky + kz*N[1])*N[0];
+                    fieldZ[ky + kz*N[1]] = Bz + (ky + kz*N[1])*N[0];
+                }
+        }
         else
         {
-            double s[] = { 1.0, 1.0, 1.0 };
-            SetSteps(s);
+            Alloc();
+
+            CopyComp(Bx, 0);
+            CopyComp(By, 1);
+            CopyComp(Bz, 2);
         }
-    }
+	}
 
-    CagmVectorField& operator=(const CagmVectorField& from) // creates only solid copy
+    uint32_t Copy(CagmVectorField *from)
     {
-        if (this == &from)
-            return *this;
+        if (from->isRef)
+        {
+            for (int ky = 0; ky < N[1]; ky++)
+                for (int kz = 0; kz < N[2]; kz++)
+                {
+                    memcpy(allocFieldX + (ky + kz*N[1])*N[0], from->allocFieldX + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
+                    memcpy(allocFieldY + (ky + kz*N[1])*N[0], from->allocFieldY + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
+                    memcpy(allocFieldZ + (ky + kz*N[1])*N[0], from->allocFieldZ + (ky + kz*N[1])*N[0], sizeof(double)*N[0]);
+                }
+        }
+        else
+        {
+            memcpy(allocFieldX, from->allocFieldX, sizeof(double)*N[0] * N[1] * N[2]);
+            memcpy(allocFieldY, from->allocFieldY, sizeof(double)*N[0] * N[1] * N[2]);
+            memcpy(allocFieldZ, from->allocFieldZ, sizeof(double)*N[0] * N[1] * N[2]);
+        }
 
-        this->CagmVectorFieldOps::operator=(from);
-
-        Delete();
-        Alloc();
-        Copy(from);
-
-        return *this;
-    }
+        return 0;
+	}
 
     uint32_t CopyComp(double *Bc, int comp)
     {
-        double *c = NULL;
+        double *c = nullptr;
         if (comp == 0)
             c = allocFieldX;
         else if (comp == 1)
@@ -221,7 +167,7 @@ public:
 
     uint32_t GetComp(double *Bc, int comp)
     {
-        double *c = NULL;
+        double *c = nullptr;
         if (comp == 0)
             c = allocFieldX;
         else if (comp == 1)
@@ -230,23 +176,6 @@ public:
             c = allocFieldZ;
 
         memcpy(Bc, c, N[0]*N[1]*N[2]*sizeof(double));
-
-        return 0;
-    }
-
-    uint32_t Copy(CagmVectorField *source, int *Mmin)
-    {
-	    int kx, ky, kz;
-        for (kz = 0; kz < N[2]; kz++)
-            for (ky = 0; ky < N[1]; ky++)
-                for (kx = 0; kx < N[0]; kx++)
-                {
-                    allocFieldX[(ky + kz*N[1])*N[0] + kx] = source->allocFieldX[(ky+Mmin[1] + (kz+Mmin[2])*source->N[1])*source->N[0] + kx+Mmin[0]];
-                    allocFieldY[(ky + kz*N[1])*N[0] + kx] = source->allocFieldY[(ky+Mmin[1] + (kz+Mmin[2])*source->N[1])*source->N[0] + kx+Mmin[0]];
-                    allocFieldZ[(ky + kz*N[1])*N[0] + kx] = source->allocFieldZ[(ky+Mmin[1] + (kz+Mmin[2])*source->N[1])*source->N[0] + kx+Mmin[0]];
-                }
-
-        SetSteps(source->step);
 
         return 0;
     }
@@ -270,25 +199,6 @@ public:
         return data->Create(N, allocFieldX, allocFieldY, allocFieldZ);
     }
 
-    uint32_t getThetaMetrics(double relBound, int stencil, CagmMetricsLim * m);
-    uint32_t getDifference(CagmVectorField * init, double relBound, int stencil, CagmMetricsLim * mabs, CagmMetricsLim * mcos, CagmMetricsCosLim * mcm);
-    
-    uint32_t crossD(CagmVectorField *a, const CagmVectorField *b);
-    uint32_t crossD(CagmVectorField *a);
-    uint32_t rotD(CagmVectorField *a);
-    uint32_t gradD(CagmScalarField *a);
-    uint32_t multD(double c, CagmVectorField *a);
-    uint32_t multD(double c);
-    uint32_t multD(CagmScalarField *c, CagmVectorField *a);
-    uint32_t multD(CagmVectorField *a, CagmScalarField *c);
-    uint32_t multD(CagmScalarField *c);
-    uint32_t addD(CagmVectorField *a, CagmVectorField *b);
-    uint32_t addD(CagmVectorField *a);
-    uint32_t subD(CagmVectorField *a, CagmVectorField *b);
-    uint32_t subD(CagmVectorField *a);
-    uint32_t negD(CagmVectorField *a);
-    uint32_t negD();
-    uint32_t zeroD();
     uint32_t condWeight(int WiegelmannProcCondBase, CagmVectorField *baseField, CagmVectorField *baseWeight, int WiegelmannProcCondBase2, CagmVectorField *baseField2, CagmVectorField *baseWeight2,
         int WiegelmannProcCondAbs, CagmScalarField *absField, CagmScalarField *absWeight, int WiegelmannProcCondAbs2, CagmScalarField *absField2, CagmScalarField *absWeight2,
         int WiegelmannProcCondLOS, CagmScalarField *losField, CagmScalarField *losWeight, int WiegelmannProcCondLOS2, CagmScalarField *losField2, CagmScalarField *losWeight2, 

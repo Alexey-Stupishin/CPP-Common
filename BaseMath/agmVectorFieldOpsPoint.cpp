@@ -8,11 +8,9 @@
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::cross_plane(CagmVectorFieldOps *a, const CagmVectorFieldOps *b, int kz)
 {
-    // check equiv. sizes!
-    int kx, ky;
     double tx, ty, tz;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             tx = a->fieldY[fidx(kx, ky, kz)] * b->fieldZ[fidx(kx, ky, kz)] - a->fieldZ[fidx(kx, ky, kz)] * b->fieldY[fidx(kx, ky, kz)];
             ty = a->fieldZ[fidx(kx, ky, kz)] * b->fieldX[fidx(kx, ky, kz)] - a->fieldX[fidx(kx, ky, kz)] * b->fieldZ[fidx(kx, ky, kz)];
@@ -29,8 +27,8 @@ uint32_t CagmVectorFieldOps::cross_plane(CagmVectorFieldOps *a, const CagmVector
 uint32_t CagmVectorFieldOps::rot_plane(CagmVectorFieldOps *a, int kz, int scheme)
 {
     double zy, yz, xz, zx, yx, xy;
-    for (int ky = 0; ky < N[1]; ky++)
-        for (int kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
             if (scheme == 3)
             {
                 if (kx == 0)
@@ -334,10 +332,9 @@ uint32_t CagmVectorFieldOps::rot_plane(CagmVectorFieldOps *a, int kz, int scheme
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::grad_plane(CagmScalarFieldOps *a, int kz, int scheme)
 {
-    // check equiv. sizes!
     double dx, dy, dz;
-    for (int ky = 0; ky < N[1]; ky++)
-        for (int kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
             if (scheme == 3)
             {
                 if (kx == 0)
@@ -486,10 +483,8 @@ uint32_t CagmVectorFieldOps::grad_plane(CagmScalarFieldOps *a, int kz, int schem
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::mult_plane(double c, CagmVectorFieldOps *a, int kz)
 {
-    // check equiv. sizes!
-    int kx, ky;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             fieldX[fidx(kx, ky, kz)] = a->fieldX[fidx(kx, ky, kz)] * c;
             fieldY[fidx(kx, ky, kz)] = a->fieldY[fidx(kx, ky, kz)] * c;
@@ -502,10 +497,8 @@ uint32_t CagmVectorFieldOps::mult_plane(double c, CagmVectorFieldOps *a, int kz)
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::mult_plane(CagmScalarFieldOps *c, CagmVectorFieldOps *a, int kz)
 {
-    // check equiv. sizes!
-    int kx, ky;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             fieldX[fidx(kx, ky, kz)] = (a->fieldX[fidx(kx, ky, kz)]) * (c->field[fidx(kx, ky, kz)]);
             fieldY[fidx(kx, ky, kz)] = (a->fieldY[fidx(kx, ky, kz)]) * (c->field[fidx(kx, ky, kz)]);
@@ -518,10 +511,8 @@ uint32_t CagmVectorFieldOps::mult_plane(CagmScalarFieldOps *c, CagmVectorFieldOp
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::add_plane(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz)
 {
-    // check equiv. sizes!
-    int kx, ky;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             fieldX[fidx(kx, ky, kz)] = a->fieldX[fidx(kx, ky, kz)] + b->fieldX[fidx(kx, ky, kz)];
             fieldY[fidx(kx, ky, kz)] = a->fieldY[fidx(kx, ky, kz)] + b->fieldY[fidx(kx, ky, kz)];
@@ -534,10 +525,8 @@ uint32_t CagmVectorFieldOps::add_plane(CagmVectorFieldOps *a, CagmVectorFieldOps
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::sub_plane(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz)
 {
-    // check equiv. sizes!
-    int kx, ky;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             fieldX[fidx(kx, ky, kz)] = a->fieldX[fidx(kx, ky, kz)] - b->fieldX[fidx(kx, ky, kz)];
             fieldY[fidx(kx, ky, kz)] = a->fieldY[fidx(kx, ky, kz)] - b->fieldY[fidx(kx, ky, kz)];
@@ -550,10 +539,8 @@ uint32_t CagmVectorFieldOps::sub_plane(CagmVectorFieldOps *a, CagmVectorFieldOps
 //-----------------------------------------------------------------------
 uint32_t CagmVectorFieldOps::neg_plane(CagmVectorFieldOps *a, int kz)
 {
-    // check equiv. sizes!
-    int kx, ky;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             fieldX[fidx(kx, ky, kz)] = -a->fieldX[fidx(kx, ky, kz)];
             fieldY[fidx(kx, ky, kz)] = -a->fieldY[fidx(kx, ky, kz)];
@@ -567,9 +554,8 @@ uint32_t CagmVectorFieldOps::neg_plane(CagmVectorFieldOps *a, int kz)
 double CagmVectorFieldOps::max2_plane(int kz)
 {
     double tmax = 0;
-    int kx, ky;
-    for (ky = 0; ky < N[1]; ky++)
-        for (kx = 0; kx < N[0]; kx++)
+    for (int ky = NL[1]; ky < NH[1]; ky++)
+        for (int kx = NL[0]; kx < NH[0]; kx++)
         {
             double t = fieldX[fidx(kx, ky, kz)] * fieldX[fidx(kx, ky, kz)] + fieldY[fidx(kx, ky, kz)] * fieldY[fidx(kx, ky, kz)] + fieldZ[fidx(kx, ky, kz)] * fieldZ[fidx(kx, ky, kz)];
             if (t > tmax)
