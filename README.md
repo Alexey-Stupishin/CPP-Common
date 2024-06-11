@@ -13,4 +13,4 @@ Current using:
 	* improve multitask functionality
 	* new implementation of NLFFF parallelization 
 
-* 29 May 2024
+* 01 June 2024 Major update

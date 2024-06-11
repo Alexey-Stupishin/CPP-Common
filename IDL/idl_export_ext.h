@@ -11,6 +11,10 @@
 #include <string>
 #include "string_ex.h"
 
+#ifdef _WINDOWS
+#pragma warning(disable:4996)
+#endif
+
 #define MFOMAPBUFLEN 256
 #define MFOMAPMAXITEMS 256
 #define IDLTERMINATIONKEY "!____idl_map_terminator_key___!"

@@ -96,8 +96,8 @@ protected:
         CopyComp(By, 1);
         CopyComp(Bz, 2);
 
-        double step[] = {1.0, 1.0, 1.0};
-        SetSteps(step);
+        double _step[] = {1.0, 1.0, 1.0};
+        SetSteps(_step);
 
         return 0;
     }
@@ -206,7 +206,7 @@ public:
 
     uint32_t CopyComp(double *Bc, int comp)
     {
-        double *c;
+        double *c = NULL;
         if (comp == 0)
             c = allocFieldX;
         else if (comp == 1)
@@ -221,7 +221,7 @@ public:
 
     uint32_t GetComp(double *Bc, int comp)
     {
-        double *c;
+        double *c = NULL;
         if (comp == 0)
             c = allocFieldX;
         else if (comp == 1)

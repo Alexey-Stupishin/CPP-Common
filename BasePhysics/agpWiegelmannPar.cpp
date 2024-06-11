@@ -6,62 +6,8 @@
 #include "agmVectorField.h"
 #include "mfoGlobals.h"
 
-#include "debug_data_trace_win.h"
+#include "DebugWrite.h"
 
-#define DEBUG_OUT_PATH "g:\\temp\\"
-class out_field
-{
-protected:
-    int nProc;
-    int iterN;
-    int depth;
-    char fn[1024], buff[32];
-
-public:
-
-    out_field(int _nProc, int _iterN, int _depth)
-        : nProc(_nProc)
-        , iterN(_iterN)
-        , depth(_depth)
-    {
-    }
-
-    void out(char *filename, CagmVectorField *v)
-    {
-#ifdef DEBUG_DATA_TRACE
-        if (depth == 1)
-        {
-            strcpy(fn, DEBUG_OUT_PATH);
-            strcat(fn, filename);
-            strcat(fn, "_");
-            itoa(iterN, buff, 32);
-            strcat(fn, buff);
-            strcat(fn, ".bin");
-            debug_data_trace_win *d = new debug_data_trace_win(fn);
-            d->write_vector(v);
-            delete d;
-        }
-#endif
-    }
-
-    void out(char *filename, CagmScalarField *v)
-    {
-#ifdef DEBUG_DATA_TRACE
-        if (depth == 1)
-        {
-            strcpy(fn, DEBUG_OUT_PATH);
-            strcat(fn, filename);
-            strcat(fn, "_");
-            itoa(iterN, buff, 32);
-            strcat(fn, buff);
-            strcat(fn, ".bin");
-            debug_data_trace_win *d = new debug_data_trace_win(fn);
-            d->write_scalar(v);
-            delete d;
-        }
-#endif
-    }
-};
 
 //-----------------------------------------------------------------------
 CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
@@ -72,6 +18,7 @@ CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
     , CagmScalarField *_absField, CagmScalarField *_absWeight
     , CagmScalarField *_losField, CagmScalarField *_losWeight
     , CagmScalarField *_bottomWeight
+    , int _depth
     , int _priority
     )
     : CagmMetrics(1, _N[2])
@@ -92,15 +39,18 @@ CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
     , Jinv(nullptr)
     , JxB(nullptr)
     , st(nullptr)
+    , depth(_depth)
     , priority(_priority)
 {
     memcpy(N, vB->N, 3*sizeof(int));
-    double *steps = vB->GetSteps();
+    double *_steps = vB->GetSteps();
 
     vgradW = new CagmVectorField(N);
-    vgradW->SetSteps(steps);
+    vgradW->SetSteps(_steps);
 
     vgradW->grad(sW);
+
+    DebugWriteData(vgradW, "debug_gradW");
 
     int Nb[3];
     Nb[0] = N[0];
@@ -109,25 +59,25 @@ CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
     vBottom = new CagmVectorField(Nb);
 
     B2 = new CagmScalarField(N);
-    B2->SetSteps(steps);
+    B2->SetSteps(_steps);
     rotB = new CagmVectorField(N);
-    rotB->SetSteps(steps);
+    rotB->SetSteps(_steps);
     divB = new CagmScalarField(N);
-    divB->SetSteps(steps);
+    divB->SetSteps(_steps);
     Wa = new CagmVectorField(N);
-    Wa->SetSteps(steps);
+    Wa->SetSteps(_steps);
     Wb = new CagmVectorField(N);
-    Wb->SetSteps(steps);
+    Wb->SetSteps(_steps);
     Wa2Wb2 = new CagmScalarField(N);
-    Wa2Wb2->SetSteps(steps);
+    Wa2Wb2->SetSteps(_steps);
     WaxB = new CagmVectorField(N);
-    WaxB->SetSteps(steps);
+    WaxB->SetSteps(_steps);
     WbxB = new CagmScalarField(N);
-    WbxB->SetSteps(steps);
+    WbxB->SetSteps(_steps);
     v = new CagmVectorField(N);
-    v->SetSteps(steps);
+    v->SetSteps(_steps);
     s = new CagmScalarField(N);
-    s->SetSteps(steps);
+    s->SetSteps(_steps);
 
     if (WiegelmannGetMetricsTheta)
     {
@@ -192,37 +142,29 @@ bool PCOProcessor::setTask(ATQPTask * _task)
 }
 
 //-----------------------------------------------------------------------
-double CagpWiegelmann::step(int _iterN, int _depth)
+double CagpWiegelmann::step(int _iterN)
 {
     iterN = _iterN;
-    depth = _depth;
     counter++;
 
-    out_field o(nProc, iterN, depth);
-    o.out("vB", vB);
+    //DebugWriteData(vB, "vB", depth, iterN);
 
     mode = 0;
     main_proc->proceed(processors, supervisor, priority);
 
-    o.out("B2", B2);
-    o.out("invB", s);
-    o.out("rotB", rotB);
-    o.out("Wa", Wa);
-    o.out("divB", divB);
-    o.out("Wb", Wb);
-    o.out("WaxB", WaxB);
-    o.out("WbxB", WbxB);
+    //DebugWriteData(B2, "B2", depth, iterN);
+    // invB rotB Wa divB Wb WaxB WbxB
 
-    double s = 0;
+    double _s = 0;
     for (int kz = 0; kz < N[2]; kz++)
-        s += L[kz];
+        _s += L[kz];
 
     mode = 1;
     main_proc->proceed(processors, supervisor, priority);
 
-    o.out("vF", (CagmVectorField *)vF);
+    //DebugWriteData(vF, "vF", depth, iterN);
 
-    return s;
+    return _s;
 }
 
 //-----------------------------------------------------------------------

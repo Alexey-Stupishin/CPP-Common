@@ -14,13 +14,6 @@ uint32_t CagmVectorFieldOps::cross_plane(CagmVectorFieldOps *a, const CagmVector
     for (ky = 0; ky < N[1]; ky++)
         for (kx = 0; kx < N[0]; kx++)
         {
-            double ax = a->fieldX[fidx(kx, ky, kz)];
-            double ay = a->fieldY[fidx(kx, ky, kz)];
-            double az = a->fieldZ[fidx(kx, ky, kz)];
-            double bx = b->fieldX[fidx(kx, ky, kz)];
-            double by = b->fieldY[fidx(kx, ky, kz)];
-            double bz = b->fieldZ[fidx(kx, ky, kz)];
-
             tx = a->fieldY[fidx(kx, ky, kz)] * b->fieldZ[fidx(kx, ky, kz)] - a->fieldZ[fidx(kx, ky, kz)] * b->fieldY[fidx(kx, ky, kz)];
             ty = a->fieldZ[fidx(kx, ky, kz)] * b->fieldX[fidx(kx, ky, kz)] - a->fieldX[fidx(kx, ky, kz)] * b->fieldZ[fidx(kx, ky, kz)];
             tz = a->fieldX[fidx(kx, ky, kz)] * b->fieldY[fidx(kx, ky, kz)] - a->fieldY[fidx(kx, ky, kz)] * b->fieldX[fidx(kx, ky, kz)];
@@ -342,7 +335,6 @@ uint32_t CagmVectorFieldOps::rot_plane(CagmVectorFieldOps *a, int kz, int scheme
 uint32_t CagmVectorFieldOps::grad_plane(CagmScalarFieldOps *a, int kz, int scheme)
 {
     // check equiv. sizes!
-    int kx, ky;
     double dx, dy, dz;
     for (int ky = 0; ky < N[1]; ky++)
         for (int kx = 0; kx < N[0]; kx++)

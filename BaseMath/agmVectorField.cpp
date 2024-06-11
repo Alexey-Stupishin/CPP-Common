@@ -12,8 +12,6 @@
 //-----------------------------------------------------------------------
 uint32_t CagmVectorField::getThetaMetrics(double relBound, int stencil, CagmMetricsLim *m)
 {
-    int *N = this->GetDimensions();
-
     CagmVectorField *J = new CagmVectorField(N);
     CagmVectorField *JxB = new CagmVectorField(N);
     J->rotScheme(this, stencil); // rotB
@@ -60,7 +58,6 @@ uint32_t CagmVectorField::getThetaMetrics(double relBound, int stencil, CagmMetr
 uint32_t CagmVectorField::getDifference(CagmVectorField *init, double relBound, int stencil, 
                                      CagmMetricsLim *mabs, CagmMetricsLim *mcos, CagmMetricsCosLim *mcm)
 {
-    int *N = GetDimensions();
     CagmScalarField *Babs1 = new CagmScalarField(N);
     Babs1->abs(init);
     CagmScalarField *Babs2 = new CagmScalarField(N);

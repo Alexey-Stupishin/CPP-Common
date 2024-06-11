@@ -67,6 +67,8 @@ uint32_t CagmScalarFieldOps::Initialize(int *_N, int *_NphysL, int *_NphysH, dou
 
     tolerance_zero = WiegelmannInversionTolerance;
 
+    set_dim(1);
+
     return 0;
 }
 
@@ -223,8 +225,6 @@ double CagmScalarFieldOps::derivative(int kx, int ky, int kz, int dir)
             d = field[fidx(kx, ky, kz+1)] - field[fidx(kx, ky, kz-1)];
         return d*0.5*step[2];
     }
-
-    return 0;
 }
 
 //-----------------------------------------------------------------------

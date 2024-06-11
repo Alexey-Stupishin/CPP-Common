@@ -1,11 +1,12 @@
 #pragma once
 
 #include "agm3DgridDefines.h"
+#include "CubeXD.h"
 
 class CagmVectorFieldOps;
 
 //------------------------------------------------------------------
-class CagmScalarFieldOps
+class CagmScalarFieldOps : public CubeXD
 {
 friend class CagmVectorFieldOps;
 

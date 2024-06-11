@@ -14,12 +14,12 @@ static void v_copyCoord(double *coord, CagmRKF45Vect *rkfv)
 }
 
 //-----------------------------------------------------------------------
-CagmVectorFieldOps::Status CagmVectorFieldOps::getOneLine(CagmRKF45 *rkf45, CagmRKF45Vect *rkfv, double step, double *coord, int maxlen, int *length, CagmRKF45::Status *status, bool noDuplicate)
+CagmVectorFieldOps::Status CagmVectorFieldOps::getOneLine(CagmRKF45 *rkf45, CagmRKF45Vect *rkfv, double _step, double *coord, int maxlen, int *length, CagmRKF45::Status *status, bool noDuplicate)
 {
     *length = 0;
     CagmVectorFieldOps::Status outstatus = CagmVectorFieldOps::Status::None;
     double t = 0;
-    double s = step;
+    double s = _step;
     if (!noDuplicate)
     {
         v_copyCoord(coord, rkfv);
@@ -52,10 +52,10 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneLine(CagmRKF45 *rkf45, Cagm
 }
 
 //-----------------------------------------------------------------------
-CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, double *start, int direction, double step, double boundAchieve, double boundAchieveBottom, 
+CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, double *start, int direction, double _step, double /* boundAchieve */, double /* boundAchieveBottom */, 
     int maxLength, int *length, double *coord, int *code)
 {
-    step = fabs(step);
+    _step = fabs(_step);
     int dirc = (direction >= 0 ? 1 : -1);
     CagmRKF45Vect rkfv(3, start);
 
@@ -91,7 +91,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
 
     rkf45->reinit(&data);
     int currlen;
-    status = getOneLine(rkf45, &rkfv, step, coord, maxLength, &currlen, &rkfstatus);
+    status = getOneLine(rkf45, &rkfv, _step, coord, maxLength, &currlen, &rkfstatus);
 
     bool needBack = (direction == 0);
     bool noDuplicate = false;
@@ -124,7 +124,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
         data.dir = -data.dir;
         rkfv = start;
         rkf45->reinit(&data);
-        status = getOneLine(rkf45, &rkfv, step, posc, rest, &currlen, &rkfstatus, noDuplicate);
+        status = getOneLine(rkf45, &rkfv, _step, posc, rest, &currlen, &rkfstatus, noDuplicate);
         if (currlen <= 1)
             currlen = 0;
 

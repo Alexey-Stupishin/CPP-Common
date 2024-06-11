@@ -227,7 +227,6 @@ uint32_t CagmScalarField::negD()
 //-----------------------------------------------------------------------
 uint32_t CagmScalarField::zeroD()
 {
-    double wsum = 0;
 	int kx, ky, kz;
     for (kz = 0; kz < N[2]; kz++)
         for (ky = 0; ky < N[1]; ky++)

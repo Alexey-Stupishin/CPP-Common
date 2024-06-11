@@ -6,6 +6,10 @@
 #include "agmScalarField.h"
 #include "agmVectorField.h"
 
+#ifdef _WINDOWS
+#pragma warning(disable:4996)
+#endif
+
 class debug_data_trace_win : public CbinDataStruct
 {
 protected:
@@ -27,16 +31,24 @@ public:
 
     void write_vector(CagmVectorField *v)
     {
-        CbinDataStruct data;
-        v->GetData(&data);
-        data.Write(fid);
+        CbinDataStruct _data;
+        v->GetData(&_data);
+        _data.Write(fid);
     }
 
     void write_scalar(CagmScalarField *v)
     {
-        CbinDataStruct data;
-        v->GetData(&data);
-        data.Write(fid);
+        CbinDataStruct _data;
+        v->GetData(&_data);
+        _data.Write(fid);
+    }
+
+    void write(CubeXD *v)
+    {
+        if (v->dim == 1)
+            write_scalar((CagmScalarField *)v);
+        else
+            write_vector((CagmVectorField *)v);
     }
 };
 
