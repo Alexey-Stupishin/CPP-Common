@@ -127,6 +127,8 @@ public:
 
     double *residualT, *dthetaT, *dthetaBT;
 
+    int *step_failed;
+
     double *residual, *dtheta, *dthetaB;
     
     int szN2;
@@ -164,6 +166,8 @@ public:
         dthetaBT = new double[length];
         residualT = new double[length];
 
+        step_failed = new int[length];
+
         for (int k = 0; k < length; k++)
         {
             depth[k] = 0;
@@ -179,6 +183,8 @@ public:
             dthetaT[k] = 0;
             dthetaBT[k] = 0;
             residualT[k] = 0;
+
+            step_failed[k] = 0;
         }
 
         dtheta = new double[length*_szN2];
@@ -214,6 +220,8 @@ public:
         delete[] dthetaT;
         delete[] dthetaBT;
         delete[] residualT;
+
+        delete[] step_failed;
 
         delete [] B2sum;
         delete [] F2max;
@@ -255,11 +263,17 @@ public:
         steps[pos] = _m->steps[0];
         stepNs[pos] = _m->stepNs[0];
         dLs[pos] = _m->dLs[0];
+        step_failed[pos] = _m->step_failed[0];
+
         z_size[pos] = _m->z_size[0];
         voxels[pos] = _m->voxels[0];
 
         dtime[pos] = _m->dtime[0];
         LBottom[pos] = _m->LBottom[0];
+
+        dthetaT[pos] = _m->dthetaT[0];
+        dthetaBT[pos] = _m->dthetaBT[0];
+        residualT[pos] = _m->residualT[0];
 
         memcpy(L + pos*szN2, _m->L, sizeof(double)*_m->szN2);
 
@@ -276,9 +290,5 @@ public:
         memcpy(sB + pos*szN2, _m->sB, sizeof(double)*_m->szN2);
         memcpy(LF + pos*szN2, _m->LF, sizeof(double)*_m->szN2);
         memcpy(LD + pos*szN2, _m->LD, sizeof(double)*_m->szN2);
-
-        dthetaT[pos] = _m->dthetaT[0];
-        dthetaBT[pos] = _m->dthetaBT[0];
-        residualT[pos] = _m->residualT[0];
     }
 };
