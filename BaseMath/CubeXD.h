@@ -34,6 +34,11 @@ public:
         _N[0] = N[0]; _N[1] = N[1]; _N[2] = N[2];
     }
 
+    int size()
+    {
+        return N[0]*N[1]*N[2];
+    }
+
     int getMatryoshkaDepth(int minChunk, double factor)
     {
         int minN = N[0];
