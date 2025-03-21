@@ -14,6 +14,8 @@
 #include <windows.h>
 #endif
 
+enum w_priority : int { lowest = -2, low = -1, normal = 0, high = 1, highest = 2 };
+
 class ATQPTask;
 
 //---------------------------------------------------------------------------------------
@@ -122,7 +124,7 @@ public:
     TaskQueueProcessor(int nThreadsInitial = 0);
     virtual ~TaskQueueProcessor();
 
-    unsigned long proceed(std::vector<ATQPProcessor *>&, ATQPSupervisor *, int priority);
+    unsigned long proceed(std::vector<ATQPProcessor *>&, ATQPSupervisor *, w_priority priority);
     ATQPSynchonizer *get_sync();
     int get_num_proc();
 

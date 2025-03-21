@@ -127,7 +127,7 @@ protected:
     int depth;
 
 protected:
-    int priority;
+    w_priority priority;
 
 public:
     CagpWiegelmann(int *_N, int _n_threads, int _stencil
@@ -139,7 +139,7 @@ public:
         , CagmScalarField *_losField, CagmScalarField *_losWeight
         , CagmScalarField *_bottomWeight
         , int _depth
-        , int _priority = w_priority::low);
+        , w_priority _priority = w_priority::low);
 	virtual ~CagpWiegelmann();
 
     double step(int _iterN);

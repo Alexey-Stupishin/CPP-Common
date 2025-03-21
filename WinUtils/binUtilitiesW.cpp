@@ -1,6 +1,38 @@
 #include "binUtilitiesW.h"
 
 //------------------------------------------------------------------
+int CbinDataStructW::ReadFile(char *filename, aslMap<int, 64> *map)
+{
+    FILE *fid = fopen(filename, "rb");
+    if (!fid)
+        return MFO_DATA_FILE_NOT_EXIST;
+
+    char buffer[HDR_BUFSIZE];
+    size_t res = fread(buffer, sizeof(uint8_t), HDR_BUFSIZE, fid);
+    if (res < HDR_BUFSIZE)
+        return MFO_DATA_FILE_TOO_SHORT;
+
+    bool bBIN = !strncmp(buffer, "AGSB", 4);
+    bool bHDF = !strncmp(buffer, "%HDF", 4);
+
+    if (bBIN)
+    {
+        rewind(fid);
+        int readres = Read(fid, map);
+        fclose(fid);
+        return readres;
+    }
+
+    if (bBIN)
+    {
+        fclose(fid);
+        return ReadHDF(filename, map);
+    }
+
+    return MFO_DATA_FILE_BIN_WRONG_FORMAT;
+}
+
+//------------------------------------------------------------------
 int CbinDataStructW::Read(FILE * fid, aslMap<int, 64> *map)
 {
     Delete();
@@ -12,9 +44,9 @@ int CbinDataStructW::Read(FILE * fid, aslMap<int, 64> *map)
     int hdrsize = 1080;
     res = fread(buffer, sizeof(uint8_t), hdrsize, fid);
     if (res < hdrsize)
-        return -1;
+        return MFO_DATA_FILE_TOO_SHORT;
     if (buffer[0] != 'A' || buffer[1] != 'G' || buffer[2] != 'S' || buffer[3] != 'B')
-        return -2;
+        return MFO_DATA_FILE_BIN_READ_ERROR;
 
     bool b32 = true;
     int NBytesSize = 4;
@@ -82,3 +114,10 @@ int CbinDataStructW::Read(FILE * fid, aslMap<int, 64> *map)
     return nRead;
 }
 
+//------------------------------------------------------------------
+int CbinDataStructW::ReadHDF(char *filename, aslMap<int, 64> *map)
+{
+    Delete();
+
+    return 0;
+}

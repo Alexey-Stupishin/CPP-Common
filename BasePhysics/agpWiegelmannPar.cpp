@@ -19,7 +19,7 @@ CagpWiegelmann::CagpWiegelmann(int *_N, int _n_threads, int _stencil
     , CagmScalarField *_losField, CagmScalarField *_losWeight
     , CagmScalarField *_bottomWeight
     , int _depth
-    , int _priority
+    , w_priority _priority
     )
     : CagmMetrics(1, _N[2])
     , vB(_sourceB)

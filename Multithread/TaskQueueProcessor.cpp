@@ -97,7 +97,7 @@ TaskQueueProcessor::~TaskQueueProcessor()
 }
 
 //-----------------------------------------------------------------------------
-unsigned long TaskQueueProcessor::proceed(std::vector<ATQPProcessor *>& processors, ATQPSupervisor *supervisor, int priority)
+unsigned long TaskQueueProcessor::proceed(std::vector<ATQPProcessor *>& processors, ATQPSupervisor *supervisor, w_priority priority)
 {
 
     std::size_t _num_proc = processors.size();
@@ -113,8 +113,29 @@ unsigned long TaskQueueProcessor::proceed(std::vector<ATQPProcessor *>& processo
     for (auto &t : threads)
     {
 #ifdef _WINDOWS
+        int sys_p;
+        switch (priority)
+        {
+            case lowest:
+                sys_p = THREAD_PRIORITY_LOWEST;
+                break;
+            case low:
+                sys_p = THREAD_PRIORITY_BELOW_NORMAL;
+                break;
+            case normal:
+                sys_p = THREAD_PRIORITY_NORMAL;
+                break;
+            case high:
+                sys_p = THREAD_PRIORITY_ABOVE_NORMAL;
+                break;
+            case highest:
+                sys_p = THREAD_PRIORITY_HIGHEST;
+                break;
+            default:
+                sys_p = THREAD_PRIORITY_BELOW_NORMAL;
+        }
         HANDLE h = (HANDLE)(t.native_handle());
-        SetThreadPriority(h, priority);
+        SetThreadPriority(h, sys_p);
 #endif
         t.join();
     }
