@@ -14,7 +14,7 @@
 #include <windows.h>
 #endif
 
-enum w_priority : int { lowest = -2, low = -1, normal = 0, high = 1, highest = 2 };
+enum w_priority /* : int */ { lowest = -2, low = -1, normal = 0, high = 1, highest = 2 };
 
 class ATQPTask;
 
