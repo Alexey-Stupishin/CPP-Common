@@ -8,8 +8,8 @@
 #include "agmRotate3D.h"
 
 //-----------------------------------------------------------------------
-CagmVectorFieldOps::CagmVectorFieldOps(int *_N, double *_step, int *_NL, int *_NH)
-    : CubeXD(_N, 3, _step, _NL, _NH)
+CagmVectorFieldOps::CagmVectorFieldOps(int *_N, double *_step, int *_NL, int *_NH, bool _isFIA)
+    : CubeXD(_N, 3, _step, _NL, _NH, _isFIA)
 {
     Initialize();
 }
@@ -202,6 +202,25 @@ uint32_t CagmVectorFieldOps::zero()
 			}
 
     return 0;
+}
+
+//-----------------------------------------------------------------------
+uint32_t CagmVectorFieldOps::relax(CagmVectorFieldOps *v, CagmVectorFieldOps *cond, CagmVectorFieldOps *weight)
+{
+    if (!cond || !weight)
+        return (uint32_t)-1;
+
+    int h = cond->height();
+    for (int z = 0; z < h; z++)
+        relax_plane_lev(v, cond, weight, z);
+
+    return 0;
+}
+
+//-----------------------------------------------------------------------
+uint32_t CagmVectorFieldOps::relax(CagmVectorFieldOps *cond, CagmVectorFieldOps *weight)
+{
+    return relax(this, cond, weight);
 }
 
 //-----------------------------------------------------------------------

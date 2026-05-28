@@ -34,16 +34,21 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneLine(CagmRKF45 *rkf45, Cagm
         }
 
         *status = rkf45->calculate(t, *rkfv, t + s, false);
-        if (*status == CagmRKF45::Status::End || *status == CagmRKF45::Status::EndByCond)
+        if (!CagmRKF45::isStatusCritical(*status))
         {
-            v_copyCoord(coord+3*(*length), rkfv);
-            (*length)++;
-        }
+            if (*status != CagmRKF45::Status::EndNoMove)
+                v_copyCoord(coord+3*((*length)++), rkfv);
 
-        if (*status != CagmRKF45::Status::End)
+            if (CagmRKF45::isFinished(*status))
+            {
+                outstatus = (*status == CagmRKF45::Status::EndByCond ?
+                    CagmVectorFieldOps::Status::Boundary : CagmVectorFieldOps::Status::Stable);
+                break;
+            }
+        }
+        else
         {
-            outstatus = (*status == CagmRKF45::Status::EndByCond || *status == CagmRKF45::Status::EndNoMove ?
-                          CagmVectorFieldOps::Status::Boundary : CagmVectorFieldOps::Status::RKF45Problem);
+            outstatus = CagmVectorFieldOps::Status::RKF45Problem;
             break;
         }
     }
@@ -102,8 +107,8 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
             for (int krev = 0; krev < currlen/2; krev++)
             {
                 double tmp = coord[krev*3];   coord[krev*3]   = coord[(currlen-1-krev)*3];   coord[(currlen-1-krev)*3]   = tmp;
-                           tmp = coord[krev*3+1]; coord[krev*3+1] = coord[(currlen-1-krev)*3+1]; coord[(currlen-1-krev)*3+1] = tmp;
-                           tmp = coord[krev*3+2]; coord[krev*3+2] = coord[(currlen-1-krev)*3+2]; coord[(currlen-1-krev)*3+2] = tmp;
+                       tmp = coord[krev*3+1]; coord[krev*3+1] = coord[(currlen-1-krev)*3+1]; coord[(currlen-1-krev)*3+1] = tmp;
+                       tmp = coord[krev*3+2]; coord[krev*3+2] = coord[(currlen-1-krev)*3+2]; coord[(currlen-1-krev)*3+2] = tmp;
             }
             noDuplicate = true;
         }
@@ -114,7 +119,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
     int rest = maxLength - currlen;
     double *posc = coord + currlen*3;
     *length += currlen;
-    *code = (int)status*100 + (int)rkfstatus;
+    *code = (int)status + (((int)rkfstatus)<<16);
 
     if (status & CagmVectorFieldOps::Status::BufferOverload)
         return status;
@@ -129,7 +134,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
             currlen = 0;
 
         *length += currlen;
-        *code += ((int)status*100 + (int)rkfstatus)*100;
+        *code += (((int)status)<<8) + (((int)rkfstatus)<<24);
     }
 
     return status;

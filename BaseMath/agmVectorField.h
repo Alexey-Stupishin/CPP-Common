@@ -28,6 +28,11 @@ public:
 protected:
 	bool isRef;
 
+    // disambig
+    double *daF;
+    double *daT;
+    CagmVectorField *B000, *B180, *Bref;
+
 protected:
     uint32_t Alloc()
     {
@@ -57,30 +62,36 @@ protected:
             delete [] allocFieldY;
             delete [] allocFieldZ;
         }
+        delete [] daF;
+        delete [] daT;
 
         return 0;
     }
 
 public:
-	CagmVectorField(int *_N, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr)
-        : CagmVectorFieldOps(_N, _step, _NL, _NH)
+	CagmVectorField(int *_N, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr, bool _isFIA = false)
+        : CagmVectorFieldOps(_N, _step, _NL, _NH, _isFIA)
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
         , isRef(false)
+        , daF(nullptr)
+        , daT(nullptr)
     {
         Alloc();
 	}
 
-	CagmVectorField(CbinDataStruct* data)
-        : CagmVectorFieldOps(data->GetDimensions())
+	CagmVectorField(CbinDataStruct* data, int idx = 0, bool _isFIA = false)
+        : CagmVectorFieldOps(data->GetDimensions(idx), nullptr, nullptr, nullptr, _isFIA)
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
         , isRef(false)
+        , daF(nullptr)
+        , daT(nullptr)
     {
         Alloc();
-        data->Copy(allocFieldX, allocFieldY, allocFieldZ);
+        data->Copy(allocFieldX, allocFieldY, allocFieldZ, idx);
 	}
 
     CagmVectorField(CubeXD *_from, bool copy = false)
@@ -88,6 +99,8 @@ public:
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
+        , daF(nullptr)
+        , daT(nullptr)
     {
         dim_ = 3;
         Alloc();
@@ -101,12 +114,14 @@ public:
         Copy(from);
     }
 
-	CagmVectorField(int *N, double *Bx, double *By, double *Bz, bool _isRef = false)
-        : CagmVectorFieldOps(N)
+	CagmVectorField(int *N, double *Bx, double *By, double *Bz, bool _isRef = false, bool _isFIA = false)
+        : CagmVectorFieldOps(N, nullptr, nullptr, nullptr, _isFIA)
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
         , isRef(_isRef)
+        , daF(nullptr)
+        , daT(nullptr)
     {
         if (isRef)
         {
@@ -146,6 +161,7 @@ public:
             memcpy(allocFieldY, from->allocFieldY, sizeof(double)*N[0] * N[1] * N[2]);
             memcpy(allocFieldZ, from->allocFieldZ, sizeof(double)*N[0] * N[1] * N[2]);
         }
+        isFIA = from->isFIA;
 
         return 0;
 	}
@@ -203,4 +219,9 @@ public:
         int WiegelmannProcCondAbs, CagmScalarField *absField, CagmScalarField *absWeight, int WiegelmannProcCondAbs2, CagmScalarField *absField2, CagmScalarField *absWeight2,
         int WiegelmannProcCondLOS, CagmScalarField *losField, CagmScalarField *losWeight, int WiegelmannProcCondLOS2, CagmScalarField *losField2, CagmScalarField *losWeight2, 
         CagmRotate3D *rotator);
+
+    uint32_t FIA2XYZ(CagmVectorField *FIA);
+    uint32_t InvertAzimuth(CagmVectorField *B);
+    double *CagmVectorField::disambigGetF(CagmVectorField *B000, CagmVectorField *B180, CagmVectorField *Bref, double *step);
+    double *CagmVectorField::disambigGetT(double ktfactor_vp, double ktfactor_v0, double ktfactor_M, double ktfactor_p, double ktfactor_init);
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #define fidx(kx, ky, kz) (ky)+(kz)*N[1]][(kx)
-
+#define fidx2(kx, ky) (ky)][(kx)
 #define fidx3(kx, ky, kz) (((ky) + (kz)*N[1])*N[0] + (kx))
 
 #define l_div_position(p, N, k1, tk) \

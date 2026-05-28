@@ -121,7 +121,7 @@ protected:
     int num_proc;
 
 public:
-    TaskQueueProcessor(int nThreadsInitial = 0);
+    TaskQueueProcessor(int nThreadsInitial = 0, int nTasks = 0);
     virtual ~TaskQueueProcessor();
 
     unsigned long proceed(std::vector<ATQPProcessor *>&, ATQPSupervisor *, w_priority priority);

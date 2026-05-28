@@ -121,6 +121,7 @@ public:
     double *dLs;
     int *z_size;
     int *voxels;
+    double *B2sumW;
     
     double *dtime;
     double *LBottom;
@@ -131,9 +132,6 @@ public:
 
     double *residual, *dtheta, *dthetaB;
     
-    int szN2;
-    double *B2sum;
-    double *F2max;
     double *sS;
     double *sSW;
     double *sSJ;
@@ -141,15 +139,27 @@ public:
     double *sSB;
     double *sB;
 
-    double *L, *LF, *LD;
+    double *LF, *LD;
 
-    // just for info, not array
-    double max_dL_incr; 
+    // just for info, not arrays
     int counter;
+    int szN2;
+    double max_dL_incr; 
 
-    CagmMetrics(int length, int _szN2)
+    CagmMetrics(int length, int _szN2, bool calc_metrics = false)
         : szN2(_szN2)
         , counter(0)
+        , dtheta(nullptr)
+        , dthetaB(nullptr)
+        , residual(nullptr)
+        , sS(nullptr)
+        , sSW(nullptr)
+        , sSJ(nullptr)
+        , sJ(nullptr)
+        , sSB(nullptr)
+        , sB(nullptr)
+        , LF(nullptr) 
+        , LD(nullptr)
     {
         depth = new int[length];
         iterN = new int[length];
@@ -158,6 +168,7 @@ public:
         dLs = new double[length];
         z_size = new int[length];
         voxels = new int[length];
+        B2sumW = new double[length];
 
         LBottom = new double[length];
         dtime = new double[length];
@@ -177,8 +188,10 @@ public:
             dLs[k] = 0;
             z_size[k] = 0;
             voxels[k] = 0;
+            B2sumW[k] = 0;
 
             LBottom[k] = 0;
+            dtime[k] = 0;
 
             dthetaT[k] = 0;
             dthetaBT[k] = 0;
@@ -187,23 +200,24 @@ public:
             step_failed[k] = 0;
         }
 
-        dtheta = new double[length*_szN2];
-        dthetaB = new double[length*_szN2];
-        residual = new double[length*_szN2];
+        if (calc_metrics)
+        {
+            dtheta = new double[length*_szN2];
+            dthetaB = new double[length*_szN2];
+            residual = new double[length*_szN2];
 
-        B2sum = new double[length*_szN2];
-        F2max = new double[length*_szN2];
-        sS = new double[length*_szN2];
-        sSW = new double[length*_szN2];
-        sSJ = new double[length*_szN2];
-        sJ = new double[length*_szN2];
-        sSB = new double[length*_szN2];
-        sB = new double[length*_szN2];
+            sS = new double[length*_szN2];
+            sSW = new double[length*_szN2];
+            sSJ = new double[length*_szN2];
+            sJ = new double[length*_szN2];
+            sSB = new double[length*_szN2];
+            sB = new double[length*_szN2];
 
-        L = new double[length*_szN2];
-        LF = new double[length*_szN2];
-        LD = new double[length*_szN2];
+            LF = new double[length*_szN2];
+            LD = new double[length*_szN2];
+        }
     }
+
     ~CagmMetrics()
     {
         delete [] depth;
@@ -213,6 +227,7 @@ public:
         delete [] dLs;
         delete[] z_size;
         delete[] voxels;
+        delete [] B2sumW;
 
         delete [] dtime;
         delete[] LBottom;
@@ -223,8 +238,6 @@ public:
 
         delete[] step_failed;
 
-        delete [] B2sum;
-        delete [] F2max;
         delete [] sS;
         delete [] sSW;
         delete [] sSJ;
@@ -232,7 +245,6 @@ public:
         delete [] sSB;
         delete [] sB;
 
-        delete [] L;
         delete [] LF;
         delete [] LD;
 
@@ -267,6 +279,7 @@ public:
 
         z_size[pos] = _m->z_size[0];
         voxels[pos] = _m->voxels[0];
+        B2sumW[pos] = _m->B2sumW[0];
 
         dtime[pos] = _m->dtime[0];
         LBottom[pos] = _m->LBottom[0];
@@ -275,20 +288,16 @@ public:
         dthetaBT[pos] = _m->dthetaBT[0];
         residualT[pos] = _m->residualT[0];
 
-        memcpy(L + pos*szN2, _m->L, sizeof(double)*_m->szN2);
-
-        memcpy(dtheta + pos*szN2, _m->dtheta, sizeof(double)*_m->szN2);
-        memcpy(dthetaB + pos*szN2, _m->dthetaB, sizeof(double)*_m->szN2);
-        memcpy(residual + pos*szN2, _m->residual, sizeof(double)*_m->szN2);
-        memcpy(B2sum + pos*szN2, _m->B2sum, sizeof(double)*_m->szN2);
-        memcpy(F2max + pos*szN2, _m->F2max, sizeof(double)*_m->szN2);
-        memcpy(sS + pos*szN2, _m->sS, sizeof(double)*_m->szN2);
-        memcpy(sSW + pos*szN2, _m->sSW, sizeof(double)*_m->szN2);
-        memcpy(sSJ + pos*szN2, _m->sSJ, sizeof(double)*_m->szN2);
-        memcpy(sJ + pos*szN2, _m->sJ, sizeof(double)*_m->szN2);
-        memcpy(sSB + pos*szN2, _m->sSB, sizeof(double)*_m->szN2);
-        memcpy(sB + pos*szN2, _m->sB, sizeof(double)*_m->szN2);
-        memcpy(LF + pos*szN2, _m->LF, sizeof(double)*_m->szN2);
-        memcpy(LD + pos*szN2, _m->LD, sizeof(double)*_m->szN2);
+        if (dtheta) memcpy(dtheta + pos*szN2, _m->dtheta, sizeof(double)*_m->szN2);
+        if (dthetaB) memcpy(dthetaB + pos*szN2, _m->dthetaB, sizeof(double)*_m->szN2);
+        if (residual) memcpy(residual + pos*szN2, _m->residual, sizeof(double)*_m->szN2);
+        if (sS) memcpy(sS + pos*szN2, _m->sS, sizeof(double)*_m->szN2);
+        if (sSW) memcpy(sSW + pos*szN2, _m->sSW, sizeof(double)*_m->szN2);
+        if (sSJ) memcpy(sSJ + pos*szN2, _m->sSJ, sizeof(double)*_m->szN2);
+        if (sJ) memcpy(sJ + pos*szN2, _m->sJ, sizeof(double)*_m->szN2);
+        if (sSB) memcpy(sSB + pos*szN2, _m->sSB, sizeof(double)*_m->szN2);
+        if (sB) (sB + pos*szN2, _m->sB, sizeof(double)*_m->szN2);
+        if (LF) memcpy(LF + pos*szN2, _m->LF, sizeof(double)*_m->szN2);
+        if (LD) memcpy(LD + pos*szN2, _m->LD, sizeof(double)*_m->szN2);
     }
 };

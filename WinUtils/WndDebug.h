@@ -1,9 +1,11 @@
-#ifndef _AGS_WNDDEBUG_H
-#define _AGS_WNDDEBUG_H
+#pragma once
 
-//#include "precompile.h"
+#ifdef _WINDOWS
+
+#include <Windows.h>
 #include "baseCritSect.h"
 #include <stdio.h>
+#include "TimeTicToc.h"
 
 class BWndDebug
 {
@@ -14,6 +16,8 @@ protected:
     HWND m_hWndListBox;
     BOOL m_bLastString;
     BOOL m_bTimeStamp;
+
+    aguTimeTicToc tic;
 
     char s[1024];
 
@@ -29,6 +33,7 @@ public:
                          HWND _hWnd = NULL, BOOL _bLastString = TRUE, BOOL _bTimeStamp = FALSE);
     void Close();
     void Say(char *format, ...);
+    void memory(char *where);
 };
 
 #endif

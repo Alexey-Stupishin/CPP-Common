@@ -185,4 +185,35 @@ public:
 
         return 0;
     }
+
+    uint32_t WeightByB(CagmVectorFieldOps *_field, double wmin, double wmax, double power)
+    {
+        CagmScalarField B(this);
+        B.abs(_field);
+
+        double bmin = DBL_MAX;
+        double bmax = 0;
+        for (int kz = 0; kz < N[2]; kz++)
+            for (int ky = 0; ky < N[2]; ky++)
+                for (int kx = 0; kx < N[2]; kx++)
+                {
+                    double f = allocField[kx + (ky + kz*N[1])*N[0]];
+
+                    if (bmin > f)
+                        bmin = f;
+                    if (bmax < f)
+                        bmax = f;
+                }
+
+        for (int kz = 0; kz < N[2]; kz++)
+            for (int ky = 0; ky < N[2]; ky++)
+                for (int kx = 0; kx < N[2]; kx++)
+                {
+                    double t = pow((allocField[kx + (ky + kz*N[1])*N[0]] - bmin) / (bmax - bmin), power);
+                    allocField[kx + (ky + kz*N[1])*N[0]] *= t*(wmax - wmin) + wmin;
+                }
+
+        return 0;
+    }
+
 };

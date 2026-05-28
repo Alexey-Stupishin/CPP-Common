@@ -9,10 +9,12 @@ protected:
     int N[3];
     double step[3];
     int NL[3], NH[3];
+    bool isFIA; // Field, Inclination, Azimuth
 
 public:
-    CubeXD(int *_N, int _dim_, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr)
+    CubeXD(int *_N, int _dim_, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr, bool _isFIA = false)
         : dim_(_dim_)
+        , isFIA(_isFIA)
     {
         N[0] = _N[0]; N[1] = _N[1]; N[2] = _N[2];
 
@@ -32,6 +34,11 @@ public:
     void dimensions(int *_N)
     {
         _N[0] = N[0]; _N[1] = N[1]; _N[2] = N[2];
+    }
+
+    int height()
+    {
+        return N[2];
     }
 
     int size()
@@ -54,6 +61,7 @@ protected:
     {
         dim_ = sample->dim_;
         N[0] = sample->N[0]; N[1] = sample->N[1]; N[2] = sample->N[2];
+        isFIA = sample->isFIA;
         setConfig(sample);
     }
 

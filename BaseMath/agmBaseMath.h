@@ -162,7 +162,7 @@ inline double v_dmax(int n, double *x, int *_im = nullptr)
 
 inline double v_dmin(int n, double *x, int *_im = nullptr)
 {
-    double m = -DBL_MAX;
+    double m = DBL_MAX;
     int im = -1;
     for (int i = 0; i < n; i++)
     {
@@ -230,4 +230,28 @@ inline bool v_interpInArrayEqdist(int n, double *x, double x0, double *Y0)
 
     *Y0 = (right - left) / (x[right] - x[left]) * (x0 - x[left]) + left;
     return true;
+}
+
+inline double v_FindInArray(int n, double *x, double which, int *im = nullptr, double *min2 = nullptr, int *im2 = nullptr)
+{
+    double *diff = new double[n];
+    for (int k = 0; k < n; k++)
+        diff[k] = fabs(x[k] - which);
+
+    int this_im;
+    double v = v_dmin(n, diff, &this_im);
+    if (im)
+        *im = this_im;
+
+    if (min2)
+    {
+        diff[this_im] = DBL_MAX;
+        *min2 = v_dmin(n, diff, &this_im);
+        if (im2)
+            *im2 = this_im;
+    }
+
+    delete[] diff;
+
+    return v;
 }

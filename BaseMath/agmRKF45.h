@@ -7,16 +7,17 @@ public:
     double *e;
 
 public:
-    CagmRKF45Vect(int _n)
+    CagmRKF45Vect()
+        : n(0),
+        e(nullptr)
+    {
+    }
+
+    CagmRKF45Vect(int _n, double _v = 0)
         : n(_n),
           e(nullptr) 
     {
-        if (n > 0)
-        {
-            e = new double[n];
-            for (int i = 0; i < n; i++)
-                e[i] = 0;
-        }
+        init(n, _v);
     }
 
     CagmRKF45Vect(int _n, double *v)
@@ -41,6 +42,17 @@ public:
             e[i] = v[i];
     }
 
+    void init(int _n, double _v = 0)
+    {
+        n = _n;
+        if (n > 0)
+        {
+            e = new double[n];
+            for (int i = 0; i < n; i++)
+                e[i] = _v;
+        }
+    }
+
     void clear()
     {
         delete [] e;
@@ -49,6 +61,33 @@ public:
     virtual ~CagmRKF45Vect()
     {
         clear();
+    }
+
+    CagmRKF45Vect& vmin(const CagmRKF45Vect& v)
+    {
+        for (int i = 0; i < n; i++)
+            e[i] = e[i] < v[i] ? e[i] : v[i];
+
+        return *this;
+    }
+
+    CagmRKF45Vect& vmax(const CagmRKF45Vect& v)
+    {
+        for (int i = 0; i < n; i++)
+            e[i] = e[i] > v[i] ? e[i] : v[i];
+
+        return *this;
+    }
+
+    static bool inRange(const CagmRKF45Vect& min, const CagmRKF45Vect& max, double lim)
+    {
+        for (int i = 0; i < min.n; i++)
+        {
+            if (fabs(min[i] - max[i]) > lim)
+                return false;
+        }
+
+        return true;
     }
 
     CagmRKF45Vect& operator=(const CagmRKF45Vect& v)
@@ -109,8 +148,8 @@ typedef bool  (*RKF45_FUNCTION_SCALAR_COND)(void *, const double);
 class CagmRKF45
 {
 public:
-    typedef enum {None = 0, EndByStep = 1, End = 2, EndByCond = 3, EndNoMove = 4, 
-                  TooManyCalcs = 11, WrongErrBound = 12, TooLittleStep = 13, TooManyExits = 14, WrongCall = 15}  Status;
+    typedef enum {None = 0, EndByStep = 1, End = 2, EndByCond = 3, EndNoMove = 4, EndByLoop = 5, 
+                  TooManyCalcs = 6, WrongErrBound = 7, TooLittleStep = 8, TooManyExits = 9, WrongCall = 10} Status;
 
 protected:
     double m_absErr, m_relErr, m_absBoundAchieve;
@@ -144,16 +183,23 @@ protected:
 
     bool m_bVect;
 
+    int m_nLoop;
+    int m_pLoop;
+    CagmRKF45Vect *m_vLoop;
+    double m_loopCond;
+
 // Construction
 public:
-    CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_VECTOR func, int n, void *par, 
-        RKF45_FUNCTION_VECTOR_COND fcond = nullptr, double absBoundAchieve = 0);
+    CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_VECTOR func, int n, void *par,
+        RKF45_FUNCTION_VECTOR_COND fcond = nullptr, double absBoundAchieve = 0, int nLoop = 0, double loopCond = 1e-4);
     CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_SCALAR func, void *par, 
-        RKF45_FUNCTION_SCALAR_COND fcond = nullptr, double absBoundAchieve = 0);
+        RKF45_FUNCTION_SCALAR_COND fcond = nullptr, double absBoundAchieve = 0, int nLoop = 0, double loopCond = 1e-4);
     virtual ~CagmRKF45();
 
     CagmRKF45::Status calculate(double& t, CagmRKF45Vect& vY, double tOut, bool bByStep);
-    CagmRKF45::Status GetStatus() { return m_status; }
+    CagmRKF45::Status GetStatus() { return m_status; };
+    static bool isStatusCritical(CagmRKF45::Status status) { return status == TooManyCalcs || status == WrongErrBound || status == TooLittleStep || status == TooManyExits || status == WrongCall; }
+    static bool isFinished(CagmRKF45::Status status) { return status == EndByCond || status == EndNoMove || status == EndByLoop; }
     void reinit(double absErr, double relErr, void *par);
     void reinit(void *par);
 
@@ -166,4 +212,5 @@ private:
     uint32_t fehl(double& s);
     double estCond(uint32_t dwRes);
     double getEeEt(CagmRKF45::Status& status);
+    bool checkLoop(CagmRKF45Vect& s);
 };

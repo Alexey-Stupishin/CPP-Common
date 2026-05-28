@@ -15,7 +15,7 @@ class CagmVectorFieldOps : public CubeXD
 friend class CagmScalarFieldOps;
 
 public:
-    typedef enum {None = 0, Boundary = 2, OutOfCube = 4, BufferOverload = 8, RKF45Problem = 16
+    typedef enum {None = 0, Boundary = 2, Stable = 4, OutOfCube = 8, BufferOverload = 16, RKF45Problem = 32
                  }  Status;
     typedef enum {Linear = 0, Lanczos = 1
                  }  Interpolator;
@@ -34,21 +34,36 @@ protected:
     double **fieldX, **fieldY, **fieldZ;
 
 public:
-	CagmVectorFieldOps(int *_N, double *_step = nullptr, int *_NphysL = nullptr, int *_NphysH = nullptr);
+	CagmVectorFieldOps(int *_N, double *_step = nullptr, int *_NphysL = nullptr, int *_NphysH = nullptr, bool _isFIA = false);
 	CagmVectorFieldOps(CubeXD *);
 	virtual ~CagmVectorFieldOps();
 
     double *getAddress(int v, int kx, int ky, int kz);
 
+    uint32_t cross_plane_lev(CagmVectorFieldOps *a, const CagmVectorFieldOps *b, int z, int z_to);
     uint32_t cross_plane(CagmVectorFieldOps *a, const CagmVectorFieldOps *b, int z);
+    uint32_t rot_plane_lev(CagmVectorFieldOps *a, int kz, int kz_to, int scheme = 3);
     uint32_t rot_plane(CagmVectorFieldOps *a, int kz, int scheme = 3);
+	uint32_t grad_plane_lev(CagmScalarFieldOps *a, int kz, int kz_to, int scheme = 3);
 	uint32_t grad_plane(CagmScalarFieldOps *a, int kz, int scheme = 3);
+    uint32_t mult_plane_lev(CagmScalarFieldOps *c, CagmVectorFieldOps *a, int kz_s, int kz_v, int kz_to);
+    uint32_t mult_plane_lev(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz_s, int kz_v, int kz_to);
+    uint32_t mult_plane_lev(CagmScalarFieldOps *c, CagmVectorFieldOps *a, int kz, int kz_to);
     uint32_t mult_plane(CagmScalarFieldOps *c, CagmVectorFieldOps *a, int kz);
     uint32_t mult_plane(double c, CagmVectorFieldOps *a, int kz);
+    uint32_t add_plane_lev(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz, int kz_arg2);
     uint32_t add_plane(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz);
+    uint32_t add_plane_lev(CagmVectorFieldOps *b, int kz, int kz_arg2);
+    uint32_t add_plane(CagmVectorFieldOps *b, int kz);
+    uint32_t sub_plane_lev(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz, int kz_arg2);
+    uint32_t sub_plane_lev(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz, int kz_arg2, int kz_to);
     uint32_t sub_plane(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz);
+    uint32_t sub_plane_lev(CagmVectorFieldOps *b, int kz, int kz_arg2);
+    uint32_t sub_plane(CagmVectorFieldOps *b, int kz);
     uint32_t neg_plane(CagmVectorFieldOps *a, int kz);
     double max2_plane(int kz);
+    uint32_t relax_plane_lev(CagmVectorFieldOps *v, CagmVectorFieldOps *cond, CagmVectorFieldOps *weight, int z);
+    uint32_t relax_plane(CagmVectorFieldOps *cond, CagmVectorFieldOps *weight, int z);
 
 	uint32_t cross(CagmVectorFieldOps *a, const CagmVectorFieldOps *b);
     uint32_t cross(CagmVectorFieldOps *a);
@@ -67,6 +82,8 @@ public:
     uint32_t neg(CagmVectorFieldOps *a);
     uint32_t neg();
     uint32_t zero();
+    uint32_t relax(CagmVectorFieldOps *v, CagmVectorFieldOps *cond, CagmVectorFieldOps *weight);
+    uint32_t relax(CagmVectorFieldOps *cond, CagmVectorFieldOps *weight);
 
     uint32_t shift(int n);
     uint32_t setZlevel(int wplane, int level, double w = 1.0);

@@ -1,13 +1,12 @@
-#include "stdafx.h"
+#ifdef _WINDOWS
 
-//#include <afxext.h>         // MFC extensions
-//#include <time.h>
+#include "stdDefinitions.h"
 
 #include "WndDebug.h"
+#include "availMem.h"
+#include "formatting.h"
 
-#ifdef _MSVC_BUILD
 #pragma warning (disable : 4996)
-#endif
 
 //------------------------------------------------------------------ 24-Apr-2001
 BWndDebug::BWndDebug(LPCSTR _lpsFileName, LPCSTR _sFileProp, BOOL _bFlush, 
@@ -43,16 +42,12 @@ void BWndDebug::Init(LPCSTR _lpsFileName, LPCSTR _sFileProp, BOOL _bFlush,
     if (_hWnd)
         m_hWndListBox = _hWnd;
 
-#ifdef _MSVC_BUILD
     m_bTimeStamp = _bTimeStamp;
     if (m_bTimeStamp)
     {
         ::QueryPerformanceFrequency(&frequency_time);
         ::QueryPerformanceCounter(&timeBegin);
     }   
-#else
-    m_bTimeStamp = FALSE;
-#endif
 }
 
 //------------------------------------------------------------------ 24-Apr-2001
@@ -67,7 +62,21 @@ void BWndDebug::Close()
 
     m_hWndListBox = NULL;
 }
-  
+
+//------------------------------------------------------------------ 24-Apr-2001
+void BWndDebug::memory(char *place)
+{
+    char meminfoGB[32], meminfo[32];
+    uint64_t avail = availableMemory(meminfoGB);
+    formatThouthands(avail, meminfo);
+
+    char procinfoGB[32], procinfo[32];
+    uint64_t proc = processMemory(procinfoGB);
+    formatThouthands(proc, procinfo);
+
+    Say("%s: available = %s (%s GB), process = %s (%s GB)", place, meminfo, meminfoGB, procinfo, procinfoGB);
+}
+
 //------------------------------------------------------------------ 24-Apr-2001
 void BWndDebug::Say(char *format, ...)
 {
@@ -77,25 +86,23 @@ void BWndDebug::Say(char *format, ...)
     cs.EnterCriticalSection();
     int pos = 0;
 
-#ifdef _MSVC_BUILD
     if (m_bTimeStamp)
     {
-        LARGE_INTEGER timeEnd;
-        ::QueryPerformanceCounter(&timeEnd);
-	    __int64 work_time = timeEnd.QuadPart - timeBegin.QuadPart;
-	    work_time = (work_time * 1000000) / frequency_time.QuadPart;
+     //   LARGE_INTEGER timeEnd;
+     //   ::QueryPerformanceCounter(&timeEnd);
+	    //__int64 work_time = timeEnd.QuadPart - timeBegin.QuadPart;
+	    //work_time = (work_time * 1000000) / frequency_time.QuadPart;
 
-        sprintf(s, "%11.2f: ", double(work_time) / 1000.);
+     //   sprintf(s, "%11.2f: ", double(work_time) / 1000.);
+        sprintf(s, "%11.2f: ", double(tic.toc()));
         pos = (int)strlen(s);
     }   
-#endif
 
     va_list ap;
     va_start(ap, format);
     vsprintf(s+pos, format, ap);
     va_end(ap);
 
-#ifdef _MSVC_BUILD
     if (m_hWndListBox)
     {
         ::SendMessage(m_hWndListBox, LB_ADDSTRING, 0, (LPARAM)s);
@@ -106,7 +113,6 @@ void BWndDebug::Say(char *format, ...)
                 ::SendMessage(m_hWndListBox, LB_SETCURSEL, iC-1, 0);
         }
     }
-#endif
 
     if (m_file)
     {
@@ -118,4 +124,4 @@ void BWndDebug::Say(char *format, ...)
     cs.LeaveCriticalSection();
 }
 
-
+#endif

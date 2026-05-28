@@ -81,9 +81,11 @@ void supervisorFunc(ATQPSupervisor* supervisor)
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-TaskQueueProcessor::TaskQueueProcessor(int nThreadsInitial)
+TaskQueueProcessor::TaskQueueProcessor(int nThreadsInitial, int nTasks)
 {
     num_proc = TaskQueueProcessor::getProcInfo(nThreadsInitial);
+    if (nTasks > 0 && num_proc > nTasks)
+        num_proc = nTasks;
     sync = new ATQPSynchonizer(num_proc);
 }
 

@@ -4,9 +4,9 @@
 #include "stdDefinitions.h"
 
 #include <stdio.h>
-
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <limits>
 
 #include "agmRKF45.h"
 
@@ -37,7 +37,7 @@ static double mepsilon()
 
 //-----------------------------------------------------------------------------
 CagmRKF45::CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_VECTOR func, int n, void *par, 
-    RKF45_FUNCTION_VECTOR_COND fcond, double absBoundAchieve)
+    RKF45_FUNCTION_VECTOR_COND fcond, double absBoundAchieve, int nLoop, double loopCond)
     : m_funcv(func),
       m_n(n),
       m_vY(n),
@@ -49,8 +49,15 @@ CagmRKF45::CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_VECTOR func, i
       m_f5(n),
       m_bVect(true),
       m_fcondv(fcond),
-      m_absBoundAchieve(absBoundAchieve)
+      m_absBoundAchieve(absBoundAchieve),
+      m_nLoop(nLoop),
+      m_vLoop(nullptr),
+      m_loopCond(loopCond)
 {
+    if (m_nLoop > 0)
+        m_vLoop = new CagmRKF45Vect[m_nLoop];
+    for (int k = 0; k < m_nLoop; k++)
+        m_vLoop[k].init(n);
     m_eps = mepsilon();
     m_u26 = EPS_U26*m_eps;
     reinit(absErr, relErr, par);
@@ -58,7 +65,7 @@ CagmRKF45::CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_VECTOR func, i
 
 //-----------------------------------------------------------------------------
 CagmRKF45::CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_SCALAR func, void *par, 
-    RKF45_FUNCTION_SCALAR_COND fcond, double absBoundAchieve)
+    RKF45_FUNCTION_SCALAR_COND fcond, double absBoundAchieve, int nLoop, double loopCond)
     : m_funcs(func),
       m_n(1),
       m_vY(1),
@@ -70,7 +77,10 @@ CagmRKF45::CagmRKF45(double absErr, double relErr, RKF45_FUNCTION_SCALAR func, v
       m_f5(1),
       m_bVect(false),
       m_fconds(fcond),
-      m_absBoundAchieve(absBoundAchieve)
+      m_absBoundAchieve(absBoundAchieve),
+      m_nLoop(nLoop),
+      m_vLoop(nullptr),
+      m_loopCond(loopCond)
 {
     m_eps = mepsilon();
     m_u26 = EPS_U26*m_eps;
@@ -84,6 +94,7 @@ void CagmRKF45::reinit(void *par)
     m_bInit  = false;
     m_kop = 0;
     m_nfe = 0;
+    m_pLoop = 0;
     m_bByStep = false;
     m_par = par;
 }
@@ -354,6 +365,8 @@ CagmRKF45::Status CagmRKF45::integrator()
             m_vY[0] = m_dY;
             m_vYP[0] = m_dYP;
         }
+        if (!checkLoop(m_vY))
+            return CagmRKF45::Status::EndByLoop;
 
         m_nfe++;
 
@@ -384,6 +397,34 @@ CagmRKF45::Status CagmRKF45::integrator()
             }
         }
     }
+}
+
+//-----------------------------------------------------------------------------
+bool CagmRKF45::checkLoop(CagmRKF45Vect& s)
+{
+    if (m_nLoop == 0)
+        return true;
+
+    if (m_pLoop < m_nLoop)
+        m_vLoop[m_pLoop++] = s;
+    else
+    {
+        CagmRKF45Vect m_minLoop(m_n, std::numeric_limits<double>::infinity()), m_maxLoop(m_n, -std::numeric_limits<double>::infinity());
+        for (int k = 0; k < m_nLoop; k++)
+        {
+            m_minLoop.vmin(m_vLoop[k]);
+            m_maxLoop.vmax(m_vLoop[k]);
+        }
+
+        if (CagmRKF45Vect::inRange(m_minLoop, m_maxLoop, m_loopCond))
+            return false;
+
+        for (int k = 1; k < m_nLoop; k++)
+            m_vLoop[k - 1] = m_vLoop[k];
+        m_vLoop[m_nLoop-1] = s;
+    }
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------

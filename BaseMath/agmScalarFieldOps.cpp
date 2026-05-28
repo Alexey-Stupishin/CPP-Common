@@ -2,8 +2,6 @@
 #include <math.h>
 #include <cfloat>
 
-#include "mfoGlobals.h"
-
 #include "agsFieldsCommon.h"
 #include "agmScalarFieldOps.h"
 #include "agmVectorFieldOps.h"
@@ -11,6 +9,8 @@
 //-----------------------------------------------------------------------
 CagmScalarFieldOps::CagmScalarFieldOps(int *_N, double *_step, int *_NL, int *_NH)
     : CubeXD(_N, 1, _step, _NL, _NH)
+    , tolerance_zero(0)
+    , tolerance_denom(0)
 {
     Initialize();
 }
@@ -18,6 +18,8 @@ CagmScalarFieldOps::CagmScalarFieldOps(int *_N, double *_step, int *_NL, int *_N
 //-----------------------------------------------------------------------
 CagmScalarFieldOps::CagmScalarFieldOps(CubeXD *from)
     : CubeXD(from)
+    , tolerance_zero(0)
+    , tolerance_denom(0)
 {
     Initialize();
 }
@@ -27,8 +29,14 @@ uint32_t CagmScalarFieldOps::Initialize()
 {
     field = new double * [N[1]*N[2]];
 
-    tolerance_zero = WiegelmannInversionTolerance;
-    tolerance_denom = WiegelmannInversionDenom;
+    return 0;
+}
+
+//-----------------------------------------------------------------------
+uint32_t CagmScalarFieldOps::setTolerances(double _tolerance_zero, double _tolerance_denom)
+{
+    tolerance_zero = _tolerance_zero;
+    tolerance_denom = _tolerance_denom;
 
     return 0;
 }

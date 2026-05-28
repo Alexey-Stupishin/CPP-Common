@@ -26,20 +26,32 @@ public:
 	CagmScalarFieldOps(CubeXD *);
 	virtual ~CagmScalarFieldOps();
 
+    uint32_t setTolerances(double _tolerance_zero, double _tolerance_denom);
+
     double *getAddress(int kx, int ky, int kz);
 
     uint32_t div_plane(CagmVectorFieldOps *a, int kz, int scheme = 3);
+    uint32_t dot_plane_lev(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz, int kz_to, CagmScalarFieldOps *Weight = nullptr);
+    uint32_t dot_plane_lev(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz, int kz_to, CagmVectorFieldOps *Weight = nullptr, int kzw = 0);
     uint32_t dot_plane(CagmVectorFieldOps *a, CagmVectorFieldOps *b, int kz, CagmScalarFieldOps *Weight = nullptr);
+    uint32_t abs2_plane_lev(CagmVectorFieldOps *a, int kz, int kz_to, CagmScalarFieldOps *Weight = nullptr);
     uint32_t abs2_plane(CagmVectorFieldOps *a, int kz, CagmScalarFieldOps *Weight = nullptr);
     uint32_t abs_plane(CagmVectorFieldOps *a, int kz, CagmScalarFieldOps *Weight = nullptr);
+    uint32_t sqrt_plane_lev(CagmScalarFieldOps *a, int kz, int kz_to);
     uint32_t sqrt_plane(CagmScalarFieldOps *a, int kz);
+    uint32_t inv_plane_lev(CagmScalarFieldOps *a, int kz, int kz_to);
     uint32_t inv_plane(CagmScalarFieldOps *a, int kz);
     uint32_t invabs_plane(CagmVectorFieldOps *a, int kz, CagmScalarFieldOps *Weight = nullptr);
-    uint32_t mult_plane(CagmScalarFieldOps *b, CagmScalarFieldOps *a, int kz);
+    uint32_t mult_plane_lev(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz, int kz_arg1, int kz_arg2);
+    uint32_t mult_plane_lev(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz, int kz_arg2);
+    uint32_t mult_plane(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz);
     uint32_t mult_plane(double c, CagmScalarFieldOps *a, int kz);
+    uint32_t add_plane_lev(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz, int kz_arg2);
     uint32_t add_plane(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz);
+//    uint32_t add_plane(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz);
     uint32_t sub_plane(CagmScalarFieldOps *a, CagmScalarFieldOps *b, int kz);
     uint32_t neg_plane(CagmScalarFieldOps *a, int kz);
+    double sum_plane_lev(int kz, CagmScalarFieldOps *weight = nullptr, int kzw = 0);
     double sum_plane(int kz, CagmScalarFieldOps *weight = nullptr);
     double max_plane(int kz);
 
