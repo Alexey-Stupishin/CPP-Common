@@ -105,7 +105,7 @@ public:
     uint32_t inCube(const double * coord, const double absBoundAchieve = 0, const double relBoundAchieve = 0);
     uint32_t getPoint(const double *coord, double *vect);
 
-    Status getOneFullLine(CagmRKF45 *rkf45, double *start, int direction, double step, double boundAchieve, double boundAchieveBottom,
+    Status getOneFullLine(CagmRKF45 *rkf45, double *start, int direction, double step, double absBoundAchieve, double relBoundAchieve,
         int maxResult, int *length, double *coord, int *status);
 
     uint32_t rotate3D(CagmRotate3D *, bool);

@@ -57,7 +57,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneLine(CagmRKF45 *rkf45, Cagm
 }
 
 //-----------------------------------------------------------------------
-CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, double *start, int direction, double _step, double /* boundAchieve */, double /* boundAchieveBottom */, 
+CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, double *start, int direction, double _step, double absBoundAchieve, double relBoundAchieve, 
     int maxLength, int *length, double *coord, int *code)
 {
     _step = fabs(_step);
@@ -79,20 +79,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
 
     CagmRKF45::Status rkfstatus;
 
-    T_Lines data;
-    data.dir = dirc;
-    data.vfield = this;
-    data.N = this->N;
-    data.fieldX = this->fieldX;
-    data.fieldY = this->fieldY;
-    data.fieldZ = this->fieldZ;
-    data.absBoundAchieve = 0;
-    data.absBoundAchieveBottom = 0;
-    //data.absBoundAchieve = boundAchieve/10;
-    //data.absBoundAchieveBottom = boundAchieveBottom - 1.1*boundAchieve;
-    //if (data.absBoundAchieveBottom < data.absBoundAchieve)
-    //    data.absBoundAchieveBottom = data.absBoundAchieve;
-    data.relBoundAchieve = 0;
+    T_Lines data(dirc, this, absBoundAchieve, relBoundAchieve);
 
     rkf45->reinit(&data);
     int currlen;
@@ -126,7 +113,7 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
 
     if (needBack)
     {
-        data.dir = -data.dir;
+        data.inverse();
         rkfv = start;
         rkf45->reinit(&data);
         status = getOneLine(rkf45, &rkfv, _step, posc, rest, &currlen, &rkfstatus, noDuplicate);
@@ -139,176 +126,3 @@ CagmVectorFieldOps::Status CagmVectorFieldOps::getOneFullLine(CagmRKF45 *rkf45, 
 
     return status;
 }
-
-////-----------------------------------------------------------------------
-//CagmVectorFieldOps::Status CagmVectorFieldOps::getMultiLines(CagmRKF45 *rkf45, double *start, int ninpt, int direction, double step, double tolerance, double boundAchieve, 
-//    int maxResult, int *length, double *coord, int *codes)
-//{
-//}
-
-////-----------------------------------------------------------------------
-//CagmVectorFieldOps::Status CagmVectorFieldOps::getLine(double *start, int ninpt, int direction, double step, double tolerance, double boundAchieve, 
-//    int maxResult, int *length, double *coord, int *codes)
-//{
-//    double c0[3], B0[3];
-//
-//    T_Lines data;
-//    data.vfield = this;
-//    data.absTol = boundAchieve;
-//    data.relTol = 0;
-//
-//    double relErr = tolerance;
-//    double absErr = 0;
-//    CagmRKF45 *rkf45 = new CagmRKF45(absErr, relErr, fdata, 3, &data, fcond, boundAchieve);
-//    step = fabs(step);
-//    int dirc = (direction >= 0 ? 1 : -1);
-//    CagmRKF45Vect rkfv(3);
-//
-//    CagmVectorFieldOps::Status status;
-//
-//    double *posc = coord;
-//    int rest = maxResult;
-//    int k;
-//    for (k = 0; k < ninpt; k++)
-//    {
-//        length[k] = 0;
-//        codes[k] = 0;
-//    }
-//    for (k = 0; k < ninpt; k++)
-//    {
-//        double *vc = start + 3*k;
-//        rkfv = vc;
-//        uint32_t rc = getPoint(vc, B0);
-//        if (rc != 0)
-//            continue;
-//
-//        CagmRKF45::Status rkfstatus;
-//
-//        status = CagmVectorFieldOps::Status::None;
-//        data.dir = dirc;
-//        int currlen;
-//
-//        rkf45->reinit(absErr, relErr, &data);
-//        CagmVectorFieldOps::Status st = getOneLine(rkf45, &rkfv, step, posc, rest, currlen, rkfstatus);
-//
-//        bool needBack = (direction == 0);
-//        bool noDuplicate = false;
-//        if (currlen > 1)
-//        {
-//            if (needBack)
-//            {
-//                for (int krev = 0; krev < currlen/2; krev++)
-//                {
-//                    double tmp = posc[krev*3]; posc[krev*3] = posc[(currlen-1-krev)*3]; posc[(currlen-1-krev)*3] = tmp;
-//                    tmp = posc[krev*3+1]; posc[krev*3+1] = posc[(currlen-1-krev)*3+1]; posc[(currlen-1-krev)*3+1] = tmp;
-//                    tmp = posc[krev*3+2]; posc[krev*3+2] = posc[(currlen-1-krev)*3+2]; posc[(currlen-1-krev)*3+2] = tmp;
-//                }
-//                noDuplicate = true;
-//            }
-//
-//            rest -= currlen;
-//            posc += currlen*3;
-//            length[k] += currlen;
-//
-//            codes[k] = (int)st*1000 + (int)rkfstatus*100;
-//        }
-//        else
-//            currlen = 0;
-//
-//        if (st == CagmVectorFieldOps::Status::BufferOverload)
-//        {
-//            status = st;
-//            codes[k] = (int)st;
-//            break;
-//        }
-//
-//        if (needBack)
-//        {
-//            data.dir = -data.dir;
-//            rkf45->reinit(absErr, relErr, &data);
-//            st = getOneLine(rkf45, &rkfv, step, posc, rest, currlen, rkfstatus, noDuplicate);
-//            if (currlen <= 1 || st != CagmVectorFieldOps::Status::Boundary)
-//                currlen = 0;
-//
-//            rest -= currlen;
-//            posc += currlen*3;
-//            length[k] += currlen;
-//
-//            codes[k] += (int)st*10 + (int)rkfstatus;
-//
-//            if (st == CagmVectorFieldOps::Status::BufferOverload)
-//            {
-//                status = st;
-//                codes[k] = (int)st;
-//                break;
-//            }
-//        }
-//    }
-//
-//    delete rkf45;
-//
-//    return status;
-//}
-//
-////-----------------------------------------------------------------------
-//CagmVectorFieldOps::Status CagmVectorFieldOps::getLine1(double *start, int direction, int maxLength, double step, double tolerance, double boundAchieve, 
-//    int& length, double *coord, double *steps)
-//{
-//    length = 0;
-//    double c0[3], v0[3];
-//    uint32_t rc = getPoint(start, v0);
-//    if (rc != 0)
-//        return CagmVectorFieldOps::Status::OutOfCube;
-//
-//    step = fabs(step);
-//    double dir = (direction < 0 ? -1 : 1);
-//    if (direction == 0)
-//    {
-//        double norm = 1 / sqrt(v0[0]*v0[0] + v0[1] * v0[1] + v0[2] * v0[2]);
-//        c0[0] = start[0] + v0[0] * norm*step;
-//        c0[1] = start[1] + v0[1] * norm*step;
-//        c0[2] = start[2] + v0[2] * norm*step;
-//        dir = (inCube(c0) ? -1 : 1);
-//    }
-//
-//    CagmRKF45Vect v(3, start);
-//    T_Lines data;
-//    data.vfield = this;
-//    data.absTol = boundAchieve;
-//    data.relTol = 0;
-//    data.dir = dir;
-//
-//    double relErr = tolerance;
-//    double absErr = 0;
-//    CagmRKF45 *rkf45 = new CagmRKF45(absErr, relErr, fdata, 3, &data, fcond, boundAchieve);
-//
-//    CagmVectorFieldOps::Status outstatus = CagmVectorFieldOps::Status::None;
-//    double t = 0;
-//    double s = step;
-//    coord[0] = v[0];
-//    coord[1] = v[1];
-//    coord[2] = v[2];
-//    steps[0] = t;
-//    length++;
-//    for (int i = 1; i < maxLength; i++)
-//    {
-//        CagmRKF45::Status status = rkf45->calculate(t, v, t + s, false);
-//        if (status == CagmRKF45::Status::End)
-//        {
-//            coord[3*length  ] = v[0];
-//            coord[3*length+1] = v[1];
-//            coord[3*length+2] = v[2];
-//            steps[length] = t;
-//            length++;
-//        }
-//        else
-//        {
-//            outstatus = (status == CagmRKF45::Status::EndByCond ? CagmVectorFieldOps::Status::Boundary : CagmVectorFieldOps::Status::RKF45Problem);
-//            break;
-//        }
-//    }
-//
-//    delete rkf45;
-//
-//    return outstatus;
-//}
