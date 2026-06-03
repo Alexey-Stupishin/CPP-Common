@@ -10,8 +10,10 @@
 
 #include "agmRKF45.h"
 
+#ifdef _WINDOWS
 #pragma warning (disable : 4127)
 #pragma warning (disable : 4514)
+#endif
 
 #define MAX_KOP 10000
 #define MAX_NFE 30000

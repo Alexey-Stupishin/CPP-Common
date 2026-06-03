@@ -222,6 +222,6 @@ public:
 
     uint32_t FIA2XYZ(CagmVectorField *FIA);
     uint32_t InvertAzimuth(CagmVectorField *B);
-    double *CagmVectorField::disambigGetF(CagmVectorField *B000, CagmVectorField *B180, CagmVectorField *Bref, double *step);
-    double *CagmVectorField::disambigGetT(double ktfactor_vp, double ktfactor_v0, double ktfactor_M, double ktfactor_p, double ktfactor_init);
+    double *disambigGetF(CagmVectorField *B000, CagmVectorField *B180, CagmVectorField *Bref, double *step);
+    double *disambigGetT(double ktfactor_vp, double ktfactor_v0, double ktfactor_M, double ktfactor_p, double ktfactor_init);
 };
