@@ -28,9 +28,3 @@ ATQPTaskFactory::ATQPTaskFactory()
 //-----------------------------------------------------------------------------
 ATQPTaskFactory::~ATQPTaskFactory()
 {}
-
-////-----------------------------------------------------------------------------
-//void ATQPTaskFactory::initialize(ATQPTask *task)
-//{ 
-//    task->id = 11 + counter++; 
-//} // ToDo: can be some uuid generation
