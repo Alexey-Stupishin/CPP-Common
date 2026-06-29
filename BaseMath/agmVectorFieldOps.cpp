@@ -8,8 +8,8 @@
 #include "agmRotate3D.h"
 
 //-----------------------------------------------------------------------
-CagmVectorFieldOps::CagmVectorFieldOps(int *_N, double *_step, int *_NL, int *_NH, bool _isFIA)
-    : CubeXD(_N, 3, _step, _NL, _NH, _isFIA)
+CagmVectorFieldOps::CagmVectorFieldOps(int *_N, double *_step, int *_NL, int *_NH)
+    : CubeXD(_N, 3, _step, _NL, _NH)
 {
     Initialize();
 }

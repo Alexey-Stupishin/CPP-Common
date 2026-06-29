@@ -1,5 +1,6 @@
 #pragma once
-#include "stdDefinitions.h"
+#include "agmVectorFieldOps.h"
+#include "agmRKF45Vect.h"
 
 class T_Lines
 {

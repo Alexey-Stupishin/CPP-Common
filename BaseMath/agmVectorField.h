@@ -29,6 +29,7 @@ protected:
 	bool isRef;
 
     // disambig
+    bool isFIA; // Field, Inclination, Azimuth
     double *daF;
     double *daT;
     CagmVectorField *B000, *B180, *Bref;
@@ -70,11 +71,12 @@ protected:
 
 public:
 	CagmVectorField(int *_N, double *_step = nullptr, int *_NL = nullptr, int *_NH = nullptr, bool _isFIA = false)
-        : CagmVectorFieldOps(_N, _step, _NL, _NH, _isFIA)
+        : CagmVectorFieldOps(_N, _step, _NL, _NH)
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
         , isRef(false)
+        , isFIA(_isFIA)
         , daF(nullptr)
         , daT(nullptr)
     {
@@ -82,11 +84,12 @@ public:
 	}
 
 	CagmVectorField(CbinDataStruct* data, int idx = 0, bool _isFIA = false)
-        : CagmVectorFieldOps(data->GetDimensions(idx), nullptr, nullptr, nullptr, _isFIA)
+        : CagmVectorFieldOps(data->GetDimensions(idx), nullptr, nullptr, nullptr)
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
         , isRef(false)
+        , isFIA(_isFIA)
         , daF(nullptr)
         , daT(nullptr)
     {
@@ -111,15 +114,17 @@ public:
         CagmVectorField *from = (CagmVectorField *)_from;
 
         isRef = from->isRef;
+        isFIA = from->isFIA;
         Copy(from);
     }
 
 	CagmVectorField(int *N, double *Bx, double *By, double *Bz, bool _isRef = false, bool _isFIA = false)
-        : CagmVectorFieldOps(N, nullptr, nullptr, nullptr, _isFIA)
+        : CagmVectorFieldOps(N, nullptr, nullptr, nullptr)
         , allocFieldX(nullptr)  
         , allocFieldY(nullptr)  
         , allocFieldZ(nullptr)  
         , isRef(_isRef)
+        , isFIA(_isFIA)
         , daF(nullptr)
         , daT(nullptr)
     {

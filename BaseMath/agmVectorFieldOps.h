@@ -34,7 +34,7 @@ protected:
     double **fieldX, **fieldY, **fieldZ;
 
 public:
-	CagmVectorFieldOps(int *_N, double *_step = nullptr, int *_NphysL = nullptr, int *_NphysH = nullptr, bool _isFIA = false);
+	CagmVectorFieldOps(int *_N, double *_step = nullptr, int *_NphysL = nullptr, int *_NphysH = nullptr);
 	CagmVectorFieldOps(CubeXD *);
 	virtual ~CagmVectorFieldOps();
 
